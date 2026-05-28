@@ -35,10 +35,33 @@ Start the backend from the repository root with:
 uv run --package backend uvicorn src.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Run the backend API tests with:
+Install the backend plus test dependencies with:
+
+```bash
+uv sync --all-packages --group test
+```
+
+Run the backend pytest suite with:
 
 ```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s backend/tests
+.\.venv\Scripts\python.exe -m pytest
 ```
 
 The twin system prompt is assembled by `src/app/domain/twin/prompt_builder.py`. `backend/context.py` now supplies prompt input data and delegates final prompt construction to that builder.
+
+The test suite is organized by backend layer:
+
+```text
+tests/
+├── api/
+│   ├── test_chat_routes.py
+│   └── test_health_routes.py
+├── domain/
+│   ├── test_prompt_builder.py
+│   └── test_twin_service.py
+├── infrastructure/
+│   ├── test_content_loaders.py
+│   ├── test_file_conversation_store.py
+│   └── test_openai_client.py
+└── conftest.py
+```
