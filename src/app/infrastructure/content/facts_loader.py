@@ -37,14 +37,20 @@ class FactsLoader:
         try:
             payload = self.path.read_text(encoding="utf-8")
         except FileNotFoundError as exc:
-            raise MissingContentError(f"Required profile file not found: {self.path}") from exc
+            raise MissingContentError(
+                f"Required profile file not found: {self.path}"
+            ) from exc
         except OSError as exc:
-            raise InvalidContentError(f"Unable to read profile file: {self.path}") from exc
+            raise InvalidContentError(
+                f"Unable to read profile file: {self.path}"
+            ) from exc
 
         try:
             facts = json.loads(payload)
         except JSONDecodeError as exc:
-            raise InvalidContentError(f"Invalid JSON in profile file: {self.path}") from exc
+            raise InvalidContentError(
+                f"Invalid JSON in profile file: {self.path}"
+            ) from exc
 
         if not isinstance(facts, dict):
             raise InvalidContentError(

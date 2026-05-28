@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DATA_DIR_NAME = "data"
 CONVERSATIONS_DIR_NAME = "conversations"
@@ -48,8 +47,11 @@ def resolve_data_path(
     project_root: Path | None = None,
     persistent_storage_root: Path | None = None,
 ) -> Path:
-    return resolve_data_dir(
-        data_dir=data_dir,
-        project_root=project_root,
-        persistent_storage_root=persistent_storage_root,
-    ) / filename
+    return (
+        resolve_data_dir(
+            data_dir=data_dir,
+            project_root=project_root,
+            persistent_storage_root=persistent_storage_root,
+        )
+        / filename
+    )

@@ -79,5 +79,8 @@ def test_build_system_prompt_preserves_custom_context_sections() -> None:
     assert "Here are summary notes from Tumelo:" in prompt
     assert "Here is the LinkedIn profile of Tumelo:" in prompt
     assert "Here are some notes from Tumelo about their communications style:" in prompt
-    assert "Here are direct contact/profile links for Tumelo (share these when asked):" in prompt
+    assert (
+        "Here are direct contact/profile links for Tumelo (share these when asked):"
+        in prompt
+    )
     assert "2026-05-28 12:30:00" in prompt

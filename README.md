@@ -2,6 +2,8 @@
 
 Backend entry point: `main:app`
 
+## Environment
+
 Required environment variables:
 
 - `OPENAI_API_KEY`: OpenAI API key used for chat completions.
@@ -17,7 +19,7 @@ Optional environment variables:
 
 Copy `.env.example` to `.env` and set the values for your environment.
 
-Default runtime content now lives under `data/`:
+Default runtime content lives under `data/`:
 
 ```text
 data/
@@ -29,39 +31,57 @@ data/
 `-- conversations/
 ```
 
-Start the backend from the repository root with:
+## Local Development
+
+Install runtime dependencies with `pip`:
+
+```bash
+pip install -r requirements.txt
+pip install black ruff pytest pytest-asyncio httpx pre-commit
+```
+
+Or install the managed dev environment with `uv`:
+
+```bash
+uv sync --group dev --group test
+```
+
+Start the backend from the repository root:
 
 ```bash
 uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Install the backend plus test dependencies with:
+Run developer checks:
 
 ```bash
-uv sync --group test
+black .
+ruff check . --fix
+pytest
+pre-commit install
+pre-commit run --all-files
 ```
 
-Run the backend pytest suite with:
+## Docker
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest
+Run the backend locally with Docker Compose:
+
+```bash
+docker compose up --build
 ```
 
-The twin system prompt is assembled by `src/app/domain/twin/prompt_builder.py`, and the root [main.py](/c:/Users/l/Documents/Shadow clone/main.py:1) is the app entrypoint for local and deployment usage.
+The Compose setup mounts `src/`, `main.py`, and `data/` for local iteration while keeping runtime defaults aligned with the container path `/app/data`.
 
-The test suite is organized by backend layer:
+## CI
 
-```text
-tests/
-|- api/
-|  |- test_chat_routes.py
-|  `- test_health_routes.py
-|- domain/
-|  |- test_prompt_builder.py
-|  `- test_twin_service.py
-|- infrastructure/
-|  |- test_content_loaders.py
-|  |- test_file_conversation_store.py
-|  `- test_openai_client.py
-`- conftest.py
-```
+GitHub Actions runs the backend pipeline on pushes to `main` and on pull requests. The workflow enforces:
+
+- `ruff check .`
+- `black --check .`
+- `pytest`
+
+## Deployment
+
+Cerebrium already deploys from [cerebrium.toml](/c:/Users/l/Documents/Shadow clone/cerebrium.toml:1) using Python `3.12` and `requirements.txt`. The Docker files in this repo are for local parity and container readiness; Cerebrium continues to use its own deployment config unless you explicitly switch platforms.
+
+The twin system prompt is assembled by [prompt_builder.py](/c:/Users/l/Documents/Shadow clone/src/app/domain/twin/prompt_builder.py:1), and the root [main.py](/c:/Users/l/Documents/Shadow clone/main.py:1) remains the app entrypoint for local and deployment usage.

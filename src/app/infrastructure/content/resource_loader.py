@@ -17,7 +17,6 @@ from src.app.core.content_paths import (
 
 from .facts_loader import FactsLoader, InvalidContentError, MissingContentError
 
-
 LINKEDIN_NOT_AVAILABLE = "LinkedIn profile not available"
 
 
@@ -61,7 +60,9 @@ class ResourceLoader:
         try:
             reader = PdfReader(str(path))
         except OSError as exc:
-            raise InvalidContentError(f"Unable to read PDF resource file: {path}") from exc
+            raise InvalidContentError(
+                f"Unable to read PDF resource file: {path}"
+            ) from exc
         except Exception as exc:
             raise InvalidContentError(f"Invalid PDF resource file: {path}") from exc
 
@@ -120,7 +121,9 @@ class ResourceLoader:
         try:
             return path.read_text(encoding="utf-8")
         except FileNotFoundError as exc:
-            raise MissingContentError(f"Required {label} file not found: {path}") from exc
+            raise MissingContentError(
+                f"Required {label} file not found: {path}"
+            ) from exc
         except OSError as exc:
             raise InvalidContentError(f"Unable to read {label} file: {path}") from exc
 
