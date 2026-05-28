@@ -19,8 +19,9 @@ from src.app.core.dependencies import (
     get_twin_service,
 )
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import ConversationStore, TwinService
+from src.app.domain.twin.service import TwinService
 from src.app.infrastructure.llm import OpenAIClient
+from src.app.infrastructure.storage import ConversationStore, FileConversationStore
 from src.app.main import create_app
 
 
@@ -69,6 +70,7 @@ class DependencyWiringTestCase(unittest.TestCase):
         self.assertIs(self.app.state.settings, self.settings)
         self.assertIsInstance(self.app.state.llm_client, OpenAIClient)
         self.assertIsInstance(self.app.state.conversation_store, ConversationStore)
+        self.assertIsInstance(self.app.state.conversation_store, FileConversationStore)
         self.assertIsInstance(self.app.state.prompt_builder, TwinPromptBuilder)
         self.assertIsInstance(self.app.state.twin_service, TwinService)
 

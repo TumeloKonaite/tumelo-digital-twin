@@ -6,8 +6,9 @@ from fastapi import FastAPI, Request
 
 from src.app.core.config import Settings, get_settings as load_settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import ConversationStore, TwinResourceLoaders, TwinService
+from src.app.domain.twin.service import TwinResourceLoaders, TwinService
 from src.app.infrastructure.llm import OpenAIClient
+from src.app.infrastructure.storage import ConversationStore, FileConversationStore
 
 
 def build_llm_client(settings: Settings) -> OpenAIClient:
@@ -15,7 +16,7 @@ def build_llm_client(settings: Settings) -> OpenAIClient:
 
 
 def build_conversation_store(settings: Settings) -> ConversationStore:
-    return ConversationStore(storage_dir=settings.conversation_storage_dir)
+    return FileConversationStore(storage_dir=settings.conversation_storage_dir)
 
 
 def build_resource_loaders(settings: Settings) -> TwinResourceLoaders:

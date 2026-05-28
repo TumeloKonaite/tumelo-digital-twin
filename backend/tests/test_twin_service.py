@@ -1,16 +1,16 @@
-import json
 import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from src.app.core.config import Settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import ConversationStore, TwinResourceLoaders, TwinService
+from src.app.domain.twin.service import TwinResourceLoaders, TwinService
+from src.app.infrastructure.storage import ConversationStore
 
 
 class TwinServiceTestCase(unittest.TestCase):
@@ -22,7 +22,7 @@ class TwinServiceTestCase(unittest.TestCase):
             openai_api_key="test-key",
             conversation_storage_dir=self.memory_dir,
         )
-        self.conversation_store = ConversationStore(self.memory_dir)
+        self.conversation_store = Mock(spec=ConversationStore)
         self.resource_loaders = TwinResourceLoaders(
             prompt_context=lambda: {},
             fallback_personality=lambda: "Fallback personality",
@@ -33,11 +33,9 @@ class TwinServiceTestCase(unittest.TestCase):
 
     def test_chat_loads_context_calls_llm_persists_and_returns_response(self):
         session_id = "session-1"
-        memory_file = self.memory_dir / f"{session_id}.json"
-        memory_file.write_text(
-            '[{"role":"assistant","content":"Earlier context"}]',
-            encoding="utf-8",
-        )
+        self.conversation_store.load.return_value = [
+            {"role": "assistant", "content": "Earlier context"}
+        ]
 
         llm_client = Mock()
         llm_client.complete.return_value = "Mocked assistant reply"
@@ -51,21 +49,11 @@ class TwinServiceTestCase(unittest.TestCase):
             personality="Test personality",
         )
 
-        with patch.object(service, "load_conversation", wraps=service.load_conversation) as load_mock, patch.object(
-            service,
-            "build_messages",
-            wraps=service.build_messages,
-        ) as build_mock, patch.object(
-            service,
-            "save_conversation",
-            wraps=service.save_conversation,
-        ) as save_mock:
-            result = service.chat("Hello there", session_id)
+        result = service.chat("Hello there", session_id)
 
         self.assertEqual(result.response, "Mocked assistant reply")
         self.assertEqual(result.session_id, session_id)
-        load_mock.assert_called_once_with(session_id)
-        build_mock.assert_called_once()
+        self.conversation_store.load.assert_called_once_with(session_id)
         llm_client.complete.assert_called_once_with(
             [
                 {"role": "system", "content": "Test personality"},
@@ -73,16 +61,8 @@ class TwinServiceTestCase(unittest.TestCase):
                 {"role": "user", "content": "Hello there"},
             ]
         )
-        save_mock.assert_called_once_with(
+        self.conversation_store.save.assert_called_once_with(
             session_id,
-            [
-                {"role": "assistant", "content": "Earlier context"},
-                {"role": "user", "content": "Hello there"},
-                {"role": "assistant", "content": "Mocked assistant reply"},
-            ],
-        )
-        self.assertEqual(
-            json.loads(memory_file.read_text(encoding="utf-8")),
             [
                 {"role": "assistant", "content": "Earlier context"},
                 {"role": "user", "content": "Hello there"},
@@ -92,8 +72,7 @@ class TwinServiceTestCase(unittest.TestCase):
 
     def test_stream_chat_persists_conversation_after_stream_completion(self):
         session_id = "stream-session"
-        memory_file = self.memory_dir / f"{session_id}.json"
-        memory_file.write_text("[]", encoding="utf-8")
+        self.conversation_store.load.return_value = []
 
         llm_client = Mock()
         llm_client.stream_complete.return_value = iter(["Mocked ", "stream"])
@@ -107,37 +86,20 @@ class TwinServiceTestCase(unittest.TestCase):
             personality="Test personality",
         )
 
-        with patch.object(service, "load_conversation", wraps=service.load_conversation) as load_mock, patch.object(
-            service,
-            "build_messages",
-            wraps=service.build_messages,
-        ) as build_mock, patch.object(
-            service,
-            "save_conversation",
-            wraps=service.save_conversation,
-        ) as save_mock:
-            result = service.stream_chat("Hello there", session_id)
-            chunks = list(result.stream)
+        result = service.stream_chat("Hello there", session_id)
+        chunks = list(result.stream)
 
         self.assertEqual(result.session_id, session_id)
         self.assertEqual(chunks, ["Mocked ", "stream"])
-        load_mock.assert_called_once_with(session_id)
-        build_mock.assert_called_once()
+        self.conversation_store.load.assert_called_once_with(session_id)
         llm_client.stream_complete.assert_called_once_with(
             [
                 {"role": "system", "content": "Test personality"},
                 {"role": "user", "content": "Hello there"},
             ]
         )
-        save_mock.assert_called_once_with(
+        self.conversation_store.save.assert_called_once_with(
             session_id,
-            [
-                {"role": "user", "content": "Hello there"},
-                {"role": "assistant", "content": "Mocked stream"},
-            ],
-        )
-        self.assertEqual(
-            json.loads(memory_file.read_text(encoding="utf-8")),
             [
                 {"role": "user", "content": "Hello there"},
                 {"role": "assistant", "content": "Mocked stream"},
@@ -179,3 +141,35 @@ class TwinServiceTestCase(unittest.TestCase):
             },
         )
         self.assertEqual(service.personality, "Built prompt")
+
+    def test_list_sessions_delegates_to_conversation_store(self):
+        self.conversation_store.list_sessions.return_value = [
+            {
+                "session_id": "session-1",
+                "message_count": 2,
+                "last_message": "Latest reply",
+            }
+        ]
+
+        service = TwinService(
+            settings=self.settings,
+            llm_client=Mock(),
+            conversation_store=self.conversation_store,
+            prompt_builder=TwinPromptBuilder(),
+            resource_loaders=self.resource_loaders,
+            personality="Test personality",
+        )
+
+        sessions = service.list_sessions()
+
+        self.assertEqual(
+            sessions,
+            [
+                {
+                    "session_id": "session-1",
+                    "message_count": 2,
+                    "last_message": "Latest reply",
+                }
+            ],
+        )
+        self.conversation_store.list_sessions.assert_called_once_with()
