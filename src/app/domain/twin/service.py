@@ -2,9 +2,7 @@ import json
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
-
-from openai import OpenAI
+from typing import Any, Callable, Iterator
 
 from src.app.core.config import Settings
 
@@ -23,51 +21,81 @@ class StreamingChatResult:
     stream: Iterator[str]
 
 
+class ConversationStore:
+    def __init__(self, storage_dir: Path) -> None:
+        self.storage_dir = Path(storage_dir)
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+
+    def load(self, session_id: str) -> list[dict[str, str]]:
+        file_path = self.storage_dir / f"{session_id}.json"
+        if file_path.exists():
+            with open(file_path, "r", encoding="utf-8") as file:
+                return json.load(file)
+        return []
+
+    def save(self, session_id: str, messages: list[dict[str, str]]) -> None:
+        file_path = self.storage_dir / f"{session_id}.json"
+        with open(file_path, "w", encoding="utf-8") as file:
+            json.dump(messages, file, indent=2, ensure_ascii=False)
+
+    def list_sessions(self) -> list[dict[str, Any]]:
+        sessions = []
+        for file_path in self.storage_dir.glob("*.json"):
+            with open(file_path, "r", encoding="utf-8") as file:
+                conversation = json.load(file)
+            sessions.append(
+                {
+                    "session_id": file_path.stem,
+                    "message_count": len(conversation),
+                    "last_message": conversation[-1]["content"] if conversation else None,
+                }
+            )
+        return sessions
+
+
+@dataclass(frozen=True)
+class TwinResourceLoaders:
+    prompt_context: Callable[[], dict[str, Any]]
+    fallback_personality: Callable[[], str]
+
+
 class TwinService:
     def __init__(
         self,
         settings: Settings,
-        client: Any | None = None,
-        memory_dir: Path | None = None,
-        personality: str | None = None,
-        prompt_builder: TwinPromptBuilder | None = None,
+        client: Any,
+        conversation_store: ConversationStore,
+        prompt_builder: TwinPromptBuilder,
+        resource_loaders: TwinResourceLoaders,
         model: str | None = None,
+        personality: str | None = None,
     ) -> None:
         self.settings = settings
-        self.client = client or OpenAI(api_key=settings.openai_api_key)
-        self.memory_dir = Path(memory_dir) if memory_dir is not None else settings.conversation_storage_dir
-        self.memory_dir.mkdir(parents=True, exist_ok=True)
-        self.prompt_builder = prompt_builder or TwinPromptBuilder()
-        self.personality = personality if personality is not None else self.load_personality()
+        self.client = client
+        self.conversation_store = conversation_store
+        self.memory_dir = self.conversation_store.storage_dir
+        self.prompt_builder = prompt_builder
+        self.resource_loaders = resource_loaders
         self.model = model or settings.openai_model
+        self.personality = personality if personality is not None else self.load_personality()
 
     def load_personality(self) -> str:
         try:
-            from backend.context import build_prompt_context
-
             return self.prompt_builder.build_system_prompt(
-                **build_prompt_context(data_dir=self.settings.content_data_dir)
+                **self.resource_loaders.prompt_context()
             ).strip()
         except Exception:
-            fallback_prompt_path = self.settings.content_data_dir.parent / "me.txt"
-            with open(fallback_prompt_path, "r", encoding="utf-8") as file:
-                return file.read().strip()
+            return self.resource_loaders.fallback_personality().strip()
 
     @staticmethod
     def generate_session_id() -> str:
         return str(uuid.uuid4())
 
     def load_conversation(self, session_id: str) -> list[dict[str, str]]:
-        file_path = self.memory_dir / f"{session_id}.json"
-        if file_path.exists():
-            with open(file_path, "r", encoding="utf-8") as file:
-                return json.load(file)
-        return []
+        return self.conversation_store.load(session_id)
 
     def save_conversation(self, session_id: str, messages: list[dict[str, str]]) -> None:
-        file_path = self.memory_dir / f"{session_id}.json"
-        with open(file_path, "w", encoding="utf-8") as file:
-            json.dump(messages, file, indent=2, ensure_ascii=False)
+        self.conversation_store.save(session_id, messages)
 
     def build_messages(
         self,
@@ -133,15 +161,4 @@ class TwinService:
         return StreamingChatResult(session_id=active_session_id, stream=generate())
 
     def list_sessions(self) -> list[dict[str, Any]]:
-        sessions = []
-        for file_path in self.memory_dir.glob("*.json"):
-            with open(file_path, "r", encoding="utf-8") as file:
-                conversation = json.load(file)
-            sessions.append(
-                {
-                    "session_id": file_path.stem,
-                    "message_count": len(conversation),
-                    "last_message": conversation[-1]["content"] if conversation else None,
-                }
-            )
-        return sessions
+        return self.conversation_store.list_sessions()

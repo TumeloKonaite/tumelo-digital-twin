@@ -3,20 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.app.api.routes.chat import router as chat_router
 from src.app.api.routes.health import router as health_router
-from src.app.core.config import Settings, get_settings
-from src.app.domain.twin.service import TwinService
+from src.app.core.config import Settings
+from src.app.core.dependencies import initialize_dependencies
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    runtime_settings = settings or get_settings()
-
     app = FastAPI()
-    app.state.settings = runtime_settings
-    app.state.twin_service = TwinService(settings=runtime_settings)
+    initialize_dependencies(app, settings=settings)
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=runtime_settings.cors_origins,
+        allow_origins=app.state.settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

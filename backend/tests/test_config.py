@@ -11,7 +11,6 @@ from pydantic import ValidationError
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from src.app.core.config import PROJECT_ROOT, Settings, get_settings
-from src.app.domain.twin.service import TwinService
 from src.app.main import create_app
 
 
@@ -94,11 +93,8 @@ class SettingsTestCase(unittest.TestCase):
             )
             client_mock = Mock()
             client_mock.chat.completions.create = create_mock
-            app.state.twin_service = TwinService(
-                settings=settings,
-                client=client_mock,
-                personality="Injected personality",
-            )
+            app.state.twin_service.client = client_mock
+            app.state.twin_service.personality = "Injected personality"
 
             response = TestClient(app).post("/chat", json={"message": "hello"})
 

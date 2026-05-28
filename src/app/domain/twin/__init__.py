@@ -1,6 +1,6 @@
 """Twin domain services."""
 
 from .prompt_builder import TwinPromptBuilder
-from .service import TwinService
+from .service import ConversationStore, TwinResourceLoaders, TwinService
 
-__all__ = ["TwinPromptBuilder", "TwinService"]
+__all__ = ["ConversationStore", "TwinPromptBuilder", "TwinResourceLoaders", "TwinService"]
