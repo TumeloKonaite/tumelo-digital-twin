@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
+from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinService
 
 
@@ -140,3 +141,34 @@ class TwinServiceTestCase(unittest.TestCase):
                 {"role": "assistant", "content": "Mocked stream"},
             ],
         )
+
+    def test_load_personality_uses_prompt_builder(self):
+        prompt_builder = Mock(spec=TwinPromptBuilder)
+        prompt_builder.build_system_prompt.return_value = "Built prompt   "
+        client_mock = Mock()
+
+        with patch(
+            "backend.context.build_prompt_context",
+            return_value={
+                "full_name": "Tumelo M",
+                "name": "Tumelo",
+                "style_heading": "Style guidelines:",
+            },
+        ) as context_mock:
+            service = TwinService(
+                client=client_mock,
+                memory_dir=self.memory_dir,
+                prompt_builder=prompt_builder,
+            )
+
+        context_mock.assert_called_once_with()
+        prompt_builder.build_system_prompt.assert_called_once()
+        self.assertEqual(
+            prompt_builder.build_system_prompt.call_args.kwargs,
+            {
+                "full_name": "Tumelo M",
+                "name": "Tumelo",
+                "style_heading": "Style guidelines:",
+            },
+        )
+        self.assertEqual(service.personality, "Built prompt")
