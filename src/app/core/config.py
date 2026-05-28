@@ -5,8 +5,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import AliasChoices, Field, field_validator
+from pydantic import AliasChoices, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+from .content_paths import default_content_data_dir, default_conversation_storage_dir
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -15,14 +17,10 @@ PERSISTENT_STORAGE_ROOT = Path("/persistent-storage")
 
 
 def _default_content_data_dir() -> Path:
-    return BACKEND_DIR / "data"
-
-
-def _default_conversation_storage_dir() -> Path:
-    persistent_memory_dir = PERSISTENT_STORAGE_ROOT / "memory"
-    if PERSISTENT_STORAGE_ROOT.exists():
-        return persistent_memory_dir
-    return PROJECT_ROOT / "memory"
+    return default_content_data_dir(
+        project_root=PROJECT_ROOT,
+        persistent_storage_root=PERSISTENT_STORAGE_ROOT,
+    )
 
 
 class Settings(BaseSettings):
@@ -56,8 +54,8 @@ class Settings(BaseSettings):
         default_factory=_default_content_data_dir,
         validation_alias=AliasChoices("CONTENT_DATA_DIR"),
     )
-    conversation_storage_dir: Path = Field(
-        default_factory=_default_conversation_storage_dir,
+    conversation_storage_dir: Path | None = Field(
+        default=None,
         validation_alias=AliasChoices("CONVERSATION_STORAGE_DIR", "MEMORY_DIR"),
     )
     cors_origins: Annotated[list[str], NoDecode] = Field(
@@ -67,11 +65,21 @@ class Settings(BaseSettings):
 
     @field_validator("content_data_dir", "conversation_storage_dir", mode="before")
     @classmethod
-    def resolve_project_path(cls, value: str | Path) -> Path:
+    def resolve_project_path(cls, value: str | Path | None) -> Path | None:
+        if value is None:
+            return None
         path = Path(value).expanduser()
         if not path.is_absolute():
             path = (PROJECT_ROOT / path).resolve()
         return path
+
+    @model_validator(mode="after")
+    def apply_default_conversation_storage_dir(self) -> Settings:
+        if self.conversation_storage_dir is None:
+            self.conversation_storage_dir = default_conversation_storage_dir(
+                self.content_data_dir
+            )
+        return self
 
     @field_validator("content_data_dir")
     @classmethod

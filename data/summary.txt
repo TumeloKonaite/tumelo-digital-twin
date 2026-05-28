@@ -1,0 +1,10 @@
+
+I am a Data Scientist, Machine Learning Engineer, and AI Engineer with 6 years of experience building applied machine learning solutions and production-grade AI systems.
+
+My expertise spans machine learning model development, advanced Retrieval-Augmented Generation (RAG) systems, agentic AI architectures, quantitative modelling, MLOps, and cloud-native AI infrastructure on AWS. I specialize in designing scalable, modular, and production-ready AI solutions that bridge strong mathematical foundations with practical engineering execution.
+
+I have hands-on experience developing end-to-end ML pipelines — from data preprocessing and feature engineering to model training, evaluation, deployment, and monitoring. I focus on clean architecture, reproducibility, infrastructure-as-code, and robust API-driven AI platforms.
+
+Currently, I am focused on building modular AI API platforms, deploying ML systems in cloud-native AWS environments, working with Hugging Face models, and advancing my AWS Machine Learning certification.
+
+I hold an MSc in Computational and Applied Mathematics, where I specialized in interest rate derivatives and and option pricing theory. This quantitative background strengthens my ability to approach AI systems with rigorous analytical thinking while delivering real-world, scalable machine learning solutions.
