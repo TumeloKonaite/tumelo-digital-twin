@@ -12,7 +12,8 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 from src.app.core.dependencies import get_twin_service
 from src.app.core.config import Settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import ChatResult, ConversationStore, TwinResourceLoaders, TwinService
+from src.app.domain.twin.service import ChatResult, TwinResourceLoaders, TwinService
+from src.app.infrastructure.storage import FileConversationStore
 from src.app.main import create_app
 
 
@@ -47,7 +48,7 @@ class ApiTestCase(unittest.TestCase):
         self.app.state.twin_service = TwinService(
             settings=self.settings,
             llm_client=llm_client,
-            conversation_store=ConversationStore(self.memory_dir),
+            conversation_store=FileConversationStore(self.memory_dir),
             prompt_builder=TwinPromptBuilder(),
             resource_loaders=self.resource_loaders,
             personality="Test personality",
