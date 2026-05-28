@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
+from src.app.core.config import Settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinService
 
@@ -17,6 +18,10 @@ class TwinServiceTestCase(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.memory_dir = Path(self.temp_dir.name)
         self.memory_dir.mkdir(parents=True, exist_ok=True)
+        self.settings = Settings(
+            openai_api_key="test-key",
+            conversation_storage_dir=self.memory_dir,
+        )
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -40,6 +45,7 @@ class TwinServiceTestCase(unittest.TestCase):
         client_mock.chat.completions.create = Mock(return_value=fake_response)
 
         service = TwinService(
+            settings=self.settings,
             client=client_mock,
             memory_dir=self.memory_dir,
             personality="Test personality",
@@ -98,6 +104,7 @@ class TwinServiceTestCase(unittest.TestCase):
         client_mock.chat.completions.create = Mock(return_value=stream_chunks)
 
         service = TwinService(
+            settings=self.settings,
             client=client_mock,
             memory_dir=self.memory_dir,
             personality="Test personality",
@@ -156,12 +163,13 @@ class TwinServiceTestCase(unittest.TestCase):
             },
         ) as context_mock:
             service = TwinService(
+                settings=self.settings,
                 client=client_mock,
                 memory_dir=self.memory_dir,
                 prompt_builder=prompt_builder,
             )
 
-        context_mock.assert_called_once_with()
+        context_mock.assert_called_once_with(data_dir=self.settings.content_data_dir)
         prompt_builder.build_system_prompt.assert_called_once()
         self.assertEqual(
             prompt_builder.build_system_prompt.call_args.kwargs,
