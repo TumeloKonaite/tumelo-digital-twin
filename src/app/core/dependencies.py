@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from fastapi import FastAPI, Request
 
 from src.app.core.config import Settings, get_settings as load_settings
-from src.app.core.content_paths import FALLBACK_PERSONALITY_FILENAME, resolve_data_path
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
+from src.app.infrastructure.content import FactsLoader, ResourceLoader
 from src.app.infrastructure.llm import OpenAIClient
 from src.app.infrastructure.storage import ConversationStore, FileConversationStore
 
@@ -20,22 +18,24 @@ def build_conversation_store(settings: Settings) -> ConversationStore:
     return FileConversationStore(storage_dir=settings.conversation_storage_dir)
 
 
-def build_resource_loaders(settings: Settings) -> TwinResourceLoaders:
-    def load_prompt_context() -> dict[str, str]:
-        from backend.context import build_prompt_context
+def build_facts_loader(settings: Settings) -> FactsLoader:
+    return FactsLoader(data_dir=settings.content_data_dir)
 
-        return build_prompt_context(data_dir=settings.content_data_dir)
 
-    def load_fallback_personality() -> str:
-        fallback_prompt_path = resolve_data_path(
-            FALLBACK_PERSONALITY_FILENAME,
-            data_dir=settings.content_data_dir,
-        )
-        return Path(fallback_prompt_path).read_text(encoding="utf-8")
+def build_content_loader(
+    settings: Settings,
+    facts_loader: FactsLoader | None = None,
+) -> ResourceLoader:
+    return ResourceLoader(
+        data_dir=settings.content_data_dir,
+        facts_loader=facts_loader,
+    )
 
+
+def build_resource_loaders(content_loader: ResourceLoader) -> TwinResourceLoaders:
     return TwinResourceLoaders(
-        prompt_context=load_prompt_context,
-        fallback_personality=load_fallback_personality,
+        prompt_context=content_loader.build_prompt_context,
+        fallback_personality=content_loader.load_fallback_personality,
     )
 
 
@@ -63,7 +63,9 @@ def initialize_dependencies(app: FastAPI, settings: Settings | None = None) -> N
     runtime_settings = settings or load_settings()
     llm_client = build_llm_client(runtime_settings)
     conversation_store = build_conversation_store(runtime_settings)
-    resource_loaders = build_resource_loaders(runtime_settings)
+    facts_loader = build_facts_loader(runtime_settings)
+    content_loader = build_content_loader(runtime_settings, facts_loader=facts_loader)
+    resource_loaders = build_resource_loaders(content_loader)
     prompt_builder = build_prompt_builder()
     twin_service = build_twin_service(
         settings=runtime_settings,
@@ -76,6 +78,8 @@ def initialize_dependencies(app: FastAPI, settings: Settings | None = None) -> N
     app.state.settings = runtime_settings
     app.state.llm_client = llm_client
     app.state.conversation_store = conversation_store
+    app.state.facts_loader = facts_loader
+    app.state.content_loader = content_loader
     app.state.resource_loaders = resource_loaders
     app.state.prompt_builder = prompt_builder
     app.state.twin_service = twin_service
