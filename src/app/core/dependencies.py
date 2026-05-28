@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 
 from src.app.core.config import Settings, get_settings as load_settings
+from src.app.core.content_paths import FALLBACK_PERSONALITY_FILENAME, resolve_data_path
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
 from src.app.infrastructure.llm import OpenAIClient
@@ -20,14 +21,16 @@ def build_conversation_store(settings: Settings) -> ConversationStore:
 
 
 def build_resource_loaders(settings: Settings) -> TwinResourceLoaders:
-    fallback_prompt_path = settings.content_data_dir.parent / "me.txt"
-
     def load_prompt_context() -> dict[str, str]:
         from backend.context import build_prompt_context
 
         return build_prompt_context(data_dir=settings.content_data_dir)
 
     def load_fallback_personality() -> str:
+        fallback_prompt_path = resolve_data_path(
+            FALLBACK_PERSONALITY_FILENAME,
+            data_dir=settings.content_data_dir,
+        )
         return Path(fallback_prompt_path).read_text(encoding="utf-8")
 
     return TwinResourceLoaders(

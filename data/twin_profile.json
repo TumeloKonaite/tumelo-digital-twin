@@ -1,0 +1,87 @@
+{
+  "full_name": "Tumelo Tshana Konaite",
+  "name": "Tumelo",
+  "current_role": "Data Scientist, AI & Machine Learning Engineer",
+  "location": "Gauteng, South Africa",
+  "email": "tumelokonaite@email.com",
+  "linkedin": "linkedin.com/in/tumelo-tshana-konaite",
+  "github": "github.com/MasterMesto",
+  "professional_summary": "Data Scientist, AI Engineer, and Machine Learning Engineer with 6 years of experience building applied machine learning models and production-grade AI systems. Strong mathematical foundation with expertise in scalable ML pipelines, advanced Retrieval-Augmented Generation (RAG) systems, agentic AI architectures, and cloud-native AI deployment on AWS. Passionate about designing modular, testable, and infrastructure-driven AI solutions that bridge quantitative rigor with real-world engineering.",
+  "strengths": [
+    "Strong mathematical and statistical foundation",
+    "End-to-end ML system design and production deployment",
+    "Advanced RAG and agentic AI system architecture",
+    "Cloud-native AI infrastructure design (AWS + Terraform)",
+    "Infrastructure-as-Code and DevOps integration",
+    "Clean, modular, and testable backend architecture",
+    "Quantitative modelling and analytical problem solving",
+    "API-first AI platform engineering",
+    "Scalable and cost-aware system design"
+  ],
+  "specialties": [
+    "Machine Learning & Statistical Modeling",
+    "Advanced Retrieval-Augmented Generation (RAG) & Agentic AI Systems",
+    "Cloud-Native AI Architecture & MLOps",
+    "End-to-End ML Pipeline Development & Deployment",
+    "Quantitative Finance & Interest Rate Modelling",
+    "AI API & Backend Platform Development"
+  ],
+  "years_experience": 6,
+  "certifications": [
+    "AWS Certified Generative AI Developer – Professional (Early Adopter)",
+    "AWS Certified Machine Learning Engineer – Associate",
+    "AWS Certified Solutions Architect – Associate",
+    "AWS Certified AI Practitioner",
+    "Linux Foundation Authentication & Authorization for Web/API"
+  ],
+  "education": [
+    {
+      "degree": "MSc in Computational and Applied Mathematics",
+      "institution": "University of the Witwatersrand",
+      "focus": "Interest Rate Derivatives, LIBOR Transition, OIS Benchmark Modelling",
+      "year": "2024"
+    },
+    {
+      "degree": "BSc Honours in Mathematical Sciences",
+      "institution": "University of the Witwatersrand",
+      "year": "2019"
+    }
+  ],
+  "current_focus": [
+    "Designing modular AI API platforms and production-ready AI services",
+    "Building and deploying advanced RAG-based and agentic AI systems",
+    "Cloud-native ML deployment using AWS and Terraform",
+    "Model management with UV (Astral)",
+    "Deploying and fine-tuning Hugging Face models"
+  ],
+  "tools": {
+    "languages": ["Python", "SQL", "Bash"],
+    "backend_frameworks": ["FastAPI", "Flask", "SQLAlchemy"],
+    "datastores": ["PostgreSQL", "MySQL", "DynamoDB", "Redis", "Chroma"],
+    "data_analytics": ["Pandas", "NumPy"],
+    "machine_learning": ["Scikit-learn", "Hugging Face Transformers"],
+    "testing": ["Unit Testing", "Integration Testing", "System Testing", "pytest"],
+    "ci_cd": [ "GitHub Actions"],
+    "infrastructure_devops": ["Docker", "Terraform", "AWS", "Linux"]
+  },
+  "projects_focus": [
+    "Production-grade RAG systems",
+    "Customer churn prediction engines",
+    "Quantitative financial modelling systems",
+    "AI-powered API platforms",
+    "Cloud-deployed ML services"
+  ],
+  "sports_affiliations": [
+    "Manchester United Fan",
+    "Kaizer Chiefs Fan",
+    "FC Barcelona Fan"
+  ],
+  "hobbies": [
+    "Hiking",
+    "Playing FIFA",
+    "Gym and fitness",
+    "Reading AI research papers",
+    "Building side AI projects",
+    "Watching football"
+  ]
+}

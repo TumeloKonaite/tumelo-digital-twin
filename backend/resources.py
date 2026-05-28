@@ -5,8 +5,14 @@ from typing import Any
 
 from pypdf import PdfReader
 
-
-DEFAULT_DATA_DIR = Path(__file__).resolve().parent / "data"
+from src.app.core.content_paths import (
+    LINKEDIN_FILENAME,
+    STYLE_FILENAME,
+    SUMMARY_FILENAME,
+    TWIN_PROFILE_FILENAME,
+    resolve_data_dir,
+    resolve_data_path,
+)
 
 
 @dataclass(frozen=True)
@@ -18,10 +24,10 @@ class PromptResources:
 
 
 def load_resources(data_dir: Path | None = None) -> PromptResources:
-    resolved_data_dir = Path(data_dir) if data_dir is not None else DEFAULT_DATA_DIR
+    resolved_data_dir = resolve_data_dir(data_dir)
 
     try:
-        reader = PdfReader(str(resolved_data_dir / "linkedin.pdf"))
+        reader = PdfReader(str(resolve_data_path(LINKEDIN_FILENAME, resolved_data_dir)))
         linkedin = ""
         for page in reader.pages:
             text = page.extract_text()
@@ -30,13 +36,22 @@ def load_resources(data_dir: Path | None = None) -> PromptResources:
     except FileNotFoundError:
         linkedin = "LinkedIn profile not available"
 
-    with open(resolved_data_dir / "summary.txt", "r", encoding="utf-8") as f:
+    with resolve_data_path(SUMMARY_FILENAME, resolved_data_dir).open(
+        "r",
+        encoding="utf-8",
+    ) as f:
         summary = f.read()
 
-    with open(resolved_data_dir / "style.txt", "r", encoding="utf-8") as f:
+    with resolve_data_path(STYLE_FILENAME, resolved_data_dir).open(
+        "r",
+        encoding="utf-8",
+    ) as f:
         style = f.read()
 
-    with open(resolved_data_dir / "facts.json", "r", encoding="utf-8") as f:
+    with resolve_data_path(TWIN_PROFILE_FILENAME, resolved_data_dir).open(
+        "r",
+        encoding="utf-8",
+    ) as f:
         facts = json.load(f)
 
     return PromptResources(

@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fastapi import Request
 from fastapi.testclient import TestClient
@@ -11,6 +12,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from src.app.core.config import Settings
 from src.app.core.dependencies import (
+    build_resource_loaders,
     get_conversation_store,
     get_llm_client,
     get_prompt_builder,
@@ -83,6 +85,29 @@ class DependencyWiringTestCase(unittest.TestCase):
         self.assertIs(get_resource_loaders(request), self.app.state.resource_loaders)
         self.assertIs(get_prompt_builder(request), self.app.state.prompt_builder)
         self.assertIs(get_twin_service(request), self.app.state.twin_service)
+
+    def test_resource_loaders_use_configured_content_data_dir(self):
+        content_data_dir = Path(self.temp_dir.name) / "content-data"
+        content_data_dir.mkdir(parents=True, exist_ok=True)
+        (content_data_dir / "fallback_personality.txt").write_text(
+            "Fallback from configured data directory",
+            encoding="utf-8",
+        )
+        settings = Settings(
+            openai_api_key="test-key",
+            content_data_dir=content_data_dir,
+        )
+
+        loaders = build_resource_loaders(settings)
+
+        with patch("backend.context.build_prompt_context", return_value={"name": "Tumelo"}) as build_prompt_context:
+            self.assertEqual(loaders.prompt_context(), {"name": "Tumelo"})
+
+        self.assertEqual(
+            loaders.fallback_personality(),
+            "Fallback from configured data directory",
+        )
+        build_prompt_context.assert_called_once_with(data_dir=content_data_dir)
 
     def test_chat_route_uses_dependency_override(self):
         self.app.dependency_overrides[get_twin_service] = lambda: MockTwinService()
