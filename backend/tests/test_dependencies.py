@@ -5,7 +5,6 @@ from pathlib import Path
 
 from fastapi import Request
 from fastapi.testclient import TestClient
-from openai import OpenAI
 
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
@@ -13,7 +12,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 from src.app.core.config import Settings
 from src.app.core.dependencies import (
     get_conversation_store,
-    get_openai_client,
+    get_llm_client,
     get_prompt_builder,
     get_resource_loaders,
     get_settings,
@@ -21,6 +20,7 @@ from src.app.core.dependencies import (
 )
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import ConversationStore, TwinService
+from src.app.infrastructure.llm import OpenAIClient
 from src.app.main import create_app
 
 
@@ -67,7 +67,7 @@ class DependencyWiringTestCase(unittest.TestCase):
 
     def test_app_initializes_dependency_state(self):
         self.assertIs(self.app.state.settings, self.settings)
-        self.assertIsInstance(self.app.state.openai_client, OpenAI)
+        self.assertIsInstance(self.app.state.llm_client, OpenAIClient)
         self.assertIsInstance(self.app.state.conversation_store, ConversationStore)
         self.assertIsInstance(self.app.state.prompt_builder, TwinPromptBuilder)
         self.assertIsInstance(self.app.state.twin_service, TwinService)
@@ -76,7 +76,7 @@ class DependencyWiringTestCase(unittest.TestCase):
         request = self._request()
 
         self.assertIs(get_settings(request), self.app.state.settings)
-        self.assertIs(get_openai_client(request), self.app.state.openai_client)
+        self.assertIs(get_llm_client(request), self.app.state.llm_client)
         self.assertIs(get_conversation_store(request), self.app.state.conversation_store)
         self.assertIs(get_resource_loaders(request), self.app.state.resource_loaders)
         self.assertIs(get_prompt_builder(request), self.app.state.prompt_builder)

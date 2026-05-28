@@ -24,6 +24,8 @@ class SettingsTestCase(unittest.TestCase):
             {
                 "OPENAI_API_KEY": "env-test-key",
                 "OPENAI_MODEL": "gpt-4.1-mini",
+                "OPENAI_TIMEOUT_SECONDS": "45",
+                "OPENAI_MAX_RETRIES": "5",
                 "CONTENT_DATA_DIR": "backend/data",
                 "CONVERSATION_STORAGE_DIR": temp_dir,
                 "CORS_ORIGINS": "http://localhost:3000,http://localhost:5173",
@@ -34,6 +36,8 @@ class SettingsTestCase(unittest.TestCase):
 
         self.assertEqual(settings.openai_api_key, "env-test-key")
         self.assertEqual(settings.openai_model, "gpt-4.1-mini")
+        self.assertEqual(settings.openai_timeout_seconds, 45.0)
+        self.assertEqual(settings.openai_max_retries, 5)
         self.assertEqual(settings.content_data_dir, PROJECT_ROOT / "backend" / "data")
         self.assertEqual(settings.conversation_storage_dir, Path(temp_dir))
         self.assertEqual(
@@ -50,6 +54,8 @@ class SettingsTestCase(unittest.TestCase):
             settings = Settings(_env_file=None)
 
         self.assertEqual(settings.openai_model, "gpt-4o-mini")
+        self.assertEqual(settings.openai_timeout_seconds, 30.0)
+        self.assertEqual(settings.openai_max_retries, 2)
         self.assertEqual(settings.content_data_dir, PROJECT_ROOT / "backend" / "data")
         self.assertEqual(settings.conversation_storage_dir, PROJECT_ROOT / "memory")
         self.assertEqual(settings.cors_origins, ["http://localhost:3000"])
@@ -82,18 +88,9 @@ class SettingsTestCase(unittest.TestCase):
                 conversation_storage_dir=Path(temp_dir),
             )
             app = create_app(settings=settings)
-            create_mock = Mock(
-                return_value=Mock(
-                    choices=[
-                        Mock(
-                            message=Mock(content="Injected reply"),
-                        )
-                    ]
-                )
-            )
-            client_mock = Mock()
-            client_mock.chat.completions.create = create_mock
-            app.state.twin_service.client = client_mock
+            llm_client = Mock()
+            llm_client.complete.return_value = "Injected reply"
+            app.state.twin_service.llm_client = llm_client
             app.state.twin_service.personality = "Injected personality"
 
             response = TestClient(app).post("/chat", json={"message": "hello"})

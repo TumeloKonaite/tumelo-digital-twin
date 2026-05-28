@@ -9,6 +9,8 @@ Required environment variables:
 Optional environment variables:
 
 - `OPENAI_MODEL`: defaults to `gpt-4o-mini`
+- `OPENAI_TIMEOUT_SECONDS`: defaults to `30`
+- `OPENAI_MAX_RETRIES`: defaults to `2`
 - `CONTENT_DATA_DIR`: defaults to `backend/data`
 - `CONVERSATION_STORAGE_DIR`: defaults to `memory` in the repo root, or `/persistent-storage/memory` when that mount exists
 - `CORS_ORIGINS`: comma-separated list or JSON array, defaults to `http://localhost:3000`

@@ -39,19 +39,12 @@ class TwinServiceTestCase(unittest.TestCase):
             encoding="utf-8",
         )
 
-        fake_response = Mock(
-            choices=[
-                Mock(
-                    message=Mock(content="Mocked assistant reply"),
-                )
-            ]
-        )
-        client_mock = Mock()
-        client_mock.chat.completions.create = Mock(return_value=fake_response)
+        llm_client = Mock()
+        llm_client.complete.return_value = "Mocked assistant reply"
 
         service = TwinService(
             settings=self.settings,
-            client=client_mock,
+            llm_client=llm_client,
             conversation_store=self.conversation_store,
             prompt_builder=TwinPromptBuilder(),
             resource_loaders=self.resource_loaders,
@@ -73,13 +66,12 @@ class TwinServiceTestCase(unittest.TestCase):
         self.assertEqual(result.session_id, session_id)
         load_mock.assert_called_once_with(session_id)
         build_mock.assert_called_once()
-        client_mock.chat.completions.create.assert_called_once_with(
-            model="gpt-4o-mini",
-            messages=[
+        llm_client.complete.assert_called_once_with(
+            [
                 {"role": "system", "content": "Test personality"},
                 {"role": "assistant", "content": "Earlier context"},
                 {"role": "user", "content": "Hello there"},
-            ],
+            ]
         )
         save_mock.assert_called_once_with(
             session_id,
@@ -103,16 +95,12 @@ class TwinServiceTestCase(unittest.TestCase):
         memory_file = self.memory_dir / f"{session_id}.json"
         memory_file.write_text("[]", encoding="utf-8")
 
-        stream_chunks = [
-            Mock(choices=[Mock(delta=Mock(content="Mocked "))]),
-            Mock(choices=[Mock(delta=Mock(content="stream"))]),
-        ]
-        client_mock = Mock()
-        client_mock.chat.completions.create = Mock(return_value=stream_chunks)
+        llm_client = Mock()
+        llm_client.stream_complete.return_value = iter(["Mocked ", "stream"])
 
         service = TwinService(
             settings=self.settings,
-            client=client_mock,
+            llm_client=llm_client,
             conversation_store=self.conversation_store,
             prompt_builder=TwinPromptBuilder(),
             resource_loaders=self.resource_loaders,
@@ -135,13 +123,11 @@ class TwinServiceTestCase(unittest.TestCase):
         self.assertEqual(chunks, ["Mocked ", "stream"])
         load_mock.assert_called_once_with(session_id)
         build_mock.assert_called_once()
-        client_mock.chat.completions.create.assert_called_once_with(
-            model="gpt-4o-mini",
-            messages=[
+        llm_client.stream_complete.assert_called_once_with(
+            [
                 {"role": "system", "content": "Test personality"},
                 {"role": "user", "content": "Hello there"},
-            ],
-            stream=True,
+            ]
         )
         save_mock.assert_called_once_with(
             session_id,
@@ -161,7 +147,7 @@ class TwinServiceTestCase(unittest.TestCase):
     def test_load_personality_uses_prompt_builder(self):
         prompt_builder = Mock(spec=TwinPromptBuilder)
         prompt_builder.build_system_prompt.return_value = "Built prompt   "
-        client_mock = Mock()
+        llm_client = Mock()
         prompt_context_loader = Mock(
             return_value={
                 "full_name": "Tumelo M",
@@ -176,7 +162,7 @@ class TwinServiceTestCase(unittest.TestCase):
 
         service = TwinService(
             settings=self.settings,
-            client=client_mock,
+            llm_client=llm_client,
             conversation_store=self.conversation_store,
             prompt_builder=prompt_builder,
             resource_loaders=resource_loaders,
