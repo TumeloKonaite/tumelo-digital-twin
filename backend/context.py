@@ -1,17 +1,12 @@
-try:
-    from .resources import linkedin, summary, facts, style
-except ImportError:
-    from resources import linkedin, summary, facts, style
 from datetime import datetime
+from pathlib import Path
+
+try:
+    from .resources import load_resources
+except ImportError:
+    from resources import load_resources
 
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-
-
-full_name = facts["full_name"]
-name = facts["name"]
-email = facts.get("email")
-linkedin_url = facts.get("linkedin")
-github_url = facts.get("github")
 
 
 def _as_url(value: str | None) -> str | None:
@@ -22,7 +17,7 @@ def _as_url(value: str | None) -> str | None:
     return f"https://{value}"
 
 
-def _contact_block() -> str:
+def _contact_block(email: str | None, linkedin_url: str | None, github_url: str | None) -> str:
     items = []
     if email:
         items.append(f"- Email: {email}")
@@ -37,25 +32,39 @@ def _contact_block() -> str:
     return "\n".join(items)
 
 
-def build_prompt_context(now: datetime | None = None) -> dict[str, str]:
+def build_prompt_context(data_dir: Path | None = None, now: datetime | None = None) -> dict[str, str]:
+    resources = load_resources(data_dir)
+    facts = resources.facts
+    name = facts["name"]
     rendered_datetime = (now or datetime.now()).strftime("%Y-%m-%d %H:%M:%S")
+
     return {
-        "full_name": full_name,
+        "full_name": facts["full_name"],
         "name": name,
         "profile": str(facts),
         "profile_heading": f"Here is some basic information about {name}:",
-        "summary": summary,
+        "summary": resources.summary,
         "summary_heading": f"Here are summary notes from {name}:",
-        "linkedin": linkedin,
+        "linkedin": resources.linkedin,
         "linkedin_heading": f"Here is the LinkedIn profile of {name}:",
-        "style": style,
+        "style": resources.style,
         "style_heading": f"Here are some notes from {name} about their communications style:",
-        "contact_links": _contact_block(),
+        "contact_links": _contact_block(
+            email=facts.get("email"),
+            linkedin_url=facts.get("linkedin"),
+            github_url=facts.get("github"),
+        ),
         "contact_links_heading": f"Here are direct contact/profile links for {name} (share these when asked):",
         "current_datetime": rendered_datetime,
     }
 
 
-def prompt(builder: TwinPromptBuilder | None = None, now: datetime | None = None) -> str:
+def prompt(
+    builder: TwinPromptBuilder | None = None,
+    now: datetime | None = None,
+    data_dir: Path | None = None,
+) -> str:
     prompt_builder = builder or TwinPromptBuilder()
-    return prompt_builder.build_system_prompt(**build_prompt_context(now=now))
+    return prompt_builder.build_system_prompt(
+        **build_prompt_context(data_dir=data_dir, now=now)
+    )

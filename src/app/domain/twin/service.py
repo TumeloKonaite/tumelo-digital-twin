@@ -1,20 +1,14 @@
 import json
-import os
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
+from src.app.core.config import Settings
+
 from .prompt_builder import TwinPromptBuilder
-
-
-BACKEND_DIR = Path(__file__).resolve().parents[4] / "backend"
-PROJECT_ROOT = BACKEND_DIR.parent
-
-load_dotenv(BACKEND_DIR / ".env", override=True)
 
 
 @dataclass
@@ -32,41 +26,31 @@ class StreamingChatResult:
 class TwinService:
     def __init__(
         self,
+        settings: Settings,
         client: Any | None = None,
         memory_dir: Path | None = None,
         personality: str | None = None,
         prompt_builder: TwinPromptBuilder | None = None,
-        model: str = "gpt-4o-mini",
+        model: str | None = None,
     ) -> None:
-        self.client = client or OpenAI()
-        self.memory_dir = Path(memory_dir) if memory_dir is not None else self.resolve_memory_dir()
+        self.settings = settings
+        self.client = client or OpenAI(api_key=settings.openai_api_key)
+        self.memory_dir = Path(memory_dir) if memory_dir is not None else settings.conversation_storage_dir
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         self.prompt_builder = prompt_builder or TwinPromptBuilder()
         self.personality = personality if personality is not None else self.load_personality()
-        self.model = model
-
-    @staticmethod
-    def resolve_memory_dir() -> Path:
-        env_memory_dir = os.getenv("MEMORY_DIR")
-        if env_memory_dir:
-            memory_dir = Path(env_memory_dir).expanduser()
-            if not memory_dir.is_absolute():
-                memory_dir = (PROJECT_ROOT / memory_dir).resolve()
-            return memory_dir
-
-        persistent_storage_root = Path("/persistent-storage")
-        if persistent_storage_root.exists():
-            return persistent_storage_root / "memory"
-
-        return PROJECT_ROOT / "memory"
+        self.model = model or settings.openai_model
 
     def load_personality(self) -> str:
         try:
             from backend.context import build_prompt_context
 
-            return self.prompt_builder.build_system_prompt(**build_prompt_context()).strip()
+            return self.prompt_builder.build_system_prompt(
+                **build_prompt_context(data_dir=self.settings.content_data_dir)
+            ).strip()
         except Exception:
-            with open(BACKEND_DIR / "me.txt", "r", encoding="utf-8") as file:
+            fallback_prompt_path = self.settings.content_data_dir.parent / "me.txt"
+            with open(fallback_prompt_path, "r", encoding="utf-8") as file:
                 return file.read().strip()
 
     @staticmethod

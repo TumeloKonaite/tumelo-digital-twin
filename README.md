@@ -1,6 +1,19 @@
-﻿# tumelo-digital-twin
+# tumelo-digital-twin
 
 Backend entry point: `src.app.main:app`
+
+Required environment variables:
+
+- `OPENAI_API_KEY`: OpenAI API key used for chat completions.
+
+Optional environment variables:
+
+- `OPENAI_MODEL`: defaults to `gpt-4o-mini`
+- `CONTENT_DATA_DIR`: defaults to `backend/data`
+- `CONVERSATION_STORAGE_DIR`: defaults to `memory` in the repo root, or `/persistent-storage/memory` when that mount exists
+- `CORS_ORIGINS`: comma-separated list or JSON array, defaults to `http://localhost:3000`
+
+Copy `.env.example` to `.env` or `backend/.env` and set the values for your environment.
 
 Start the backend from the repository root with:
 

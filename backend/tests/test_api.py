@@ -2,16 +2,16 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
 
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
-from src.app.main import app
-from src.app.api.routes import chat as chat_routes
+from src.app.core.config import Settings
 from src.app.domain.twin.service import ChatResult, TwinService
+from src.app.main import create_app
 
 
 class ApiTestCase(unittest.TestCase):
@@ -19,12 +19,14 @@ class ApiTestCase(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.memory_dir = Path(self.temp_dir.name)
         self.memory_dir.mkdir(parents=True, exist_ok=True)
-        self.memory_patch = patch.object(chat_routes.twin_service, "memory_dir", self.memory_dir)
-        self.memory_patch.start()
-        self.client = TestClient(app)
+        self.settings = Settings(
+            openai_api_key="test-key",
+            conversation_storage_dir=self.memory_dir,
+        )
+        self.app = create_app(settings=self.settings)
+        self.client = TestClient(self.app)
 
     def tearDown(self):
-        self.memory_patch.stop()
         self.temp_dir.cleanup()
 
     def test_health_endpoint(self):
@@ -45,17 +47,13 @@ class ApiTestCase(unittest.TestCase):
         )
         client_mock = Mock()
         client_mock.chat.completions.create = create_mock
-        service = TwinService(
+        self.app.state.twin_service = TwinService(
+            settings=self.settings,
             client=client_mock,
-            memory_dir=self.memory_dir,
             personality="Test personality",
         )
 
-        app.dependency_overrides[chat_routes.get_twin_service] = lambda: service
-        try:
-            response = self.client.post("/chat", json={"message": "Hello there"})
-        finally:
-            app.dependency_overrides.clear()
+        response = self.client.post("/chat", json={"message": "Hello there"})
 
         self.assertEqual(response.status_code, 200)
 
@@ -76,12 +74,9 @@ class ApiTestCase(unittest.TestCase):
             response="Delegated assistant reply",
             session_id="session-123",
         )
+        self.app.state.twin_service = service
 
-        app.dependency_overrides[chat_routes.get_twin_service] = lambda: service
-        try:
-            response = self.client.post("/chat", json={"message": "Hello there"})
-        finally:
-            app.dependency_overrides.clear()
+        response = self.client.post("/chat", json={"message": "Hello there"})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
