@@ -42,6 +42,16 @@ class Settings(BaseSettings):
         default="gpt-4o-mini",
         validation_alias=AliasChoices("OPENAI_MODEL"),
     )
+    openai_timeout_seconds: float = Field(
+        default=30.0,
+        gt=0,
+        validation_alias=AliasChoices("OPENAI_TIMEOUT_SECONDS"),
+    )
+    openai_max_retries: int = Field(
+        default=2,
+        ge=0,
+        validation_alias=AliasChoices("OPENAI_MAX_RETRIES"),
+    )
     content_data_dir: Path = Field(
         default_factory=_default_content_data_dir,
         validation_alias=AliasChoices("CONTENT_DATA_DIR"),

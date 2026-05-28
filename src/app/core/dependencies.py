@@ -3,15 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from openai import OpenAI
 
 from src.app.core.config import Settings, get_settings as load_settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import ConversationStore, TwinResourceLoaders, TwinService
+from src.app.infrastructure.llm import OpenAIClient
 
 
-def build_openai_client(settings: Settings) -> OpenAI:
-    return OpenAI(api_key=settings.openai_api_key)
+def build_llm_client(settings: Settings) -> OpenAIClient:
+    return OpenAIClient(settings=settings)
 
 
 def build_conversation_store(settings: Settings) -> ConversationStore:
@@ -41,14 +41,14 @@ def build_prompt_builder() -> TwinPromptBuilder:
 
 def build_twin_service(
     settings: Settings,
-    client: OpenAI,
+    llm_client: OpenAIClient,
     conversation_store: ConversationStore,
     resource_loaders: TwinResourceLoaders,
     prompt_builder: TwinPromptBuilder,
 ) -> TwinService:
     return TwinService(
         settings=settings,
-        client=client,
+        llm_client=llm_client,
         conversation_store=conversation_store,
         resource_loaders=resource_loaders,
         prompt_builder=prompt_builder,
@@ -57,20 +57,20 @@ def build_twin_service(
 
 def initialize_dependencies(app: FastAPI, settings: Settings | None = None) -> None:
     runtime_settings = settings or load_settings()
-    openai_client = build_openai_client(runtime_settings)
+    llm_client = build_llm_client(runtime_settings)
     conversation_store = build_conversation_store(runtime_settings)
     resource_loaders = build_resource_loaders(runtime_settings)
     prompt_builder = build_prompt_builder()
     twin_service = build_twin_service(
         settings=runtime_settings,
-        client=openai_client,
+        llm_client=llm_client,
         conversation_store=conversation_store,
         resource_loaders=resource_loaders,
         prompt_builder=prompt_builder,
     )
 
     app.state.settings = runtime_settings
-    app.state.openai_client = openai_client
+    app.state.llm_client = llm_client
     app.state.conversation_store = conversation_store
     app.state.resource_loaders = resource_loaders
     app.state.prompt_builder = prompt_builder
@@ -81,8 +81,8 @@ def get_settings(request: Request) -> Settings:
     return request.app.state.settings
 
 
-def get_openai_client(request: Request) -> OpenAI:
-    return request.app.state.openai_client
+def get_llm_client(request: Request) -> OpenAIClient:
+    return request.app.state.llm_client
 
 
 def get_conversation_store(request: Request) -> ConversationStore:

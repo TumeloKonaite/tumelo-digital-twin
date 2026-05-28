@@ -1,8 +1,9 @@
 import json
 import uuid
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Protocol
 
 from src.app.core.config import Settings
 
@@ -59,24 +60,28 @@ class TwinResourceLoaders:
     fallback_personality: Callable[[], str]
 
 
+class LLMAdapter(Protocol):
+    def complete(self, messages: list[dict[str, str]]) -> str: ...
+
+    def stream_complete(self, messages: list[dict[str, str]]) -> Iterator[str]: ...
+
+
 class TwinService:
     def __init__(
         self,
         settings: Settings,
-        client: Any,
+        llm_client: LLMAdapter,
         conversation_store: ConversationStore,
         prompt_builder: TwinPromptBuilder,
         resource_loaders: TwinResourceLoaders,
-        model: str | None = None,
         personality: str | None = None,
     ) -> None:
         self.settings = settings
-        self.client = client
+        self.llm_client = llm_client
         self.conversation_store = conversation_store
         self.memory_dir = self.conversation_store.storage_dir
         self.prompt_builder = prompt_builder
         self.resource_loaders = resource_loaders
-        self.model = model or settings.openai_model
         self.personality = personality if personality is not None else self.load_personality()
 
     def load_personality(self) -> str:
@@ -112,12 +117,7 @@ class TwinService:
         conversation = self.load_conversation(active_session_id)
         messages = self.build_messages(conversation, user_message)
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-        )
-
-        assistant_response = response.choices[0].message.content
+        assistant_response = self.llm_client.complete(messages)
         conversation.append({"role": "user", "content": user_message})
         conversation.append({"role": "assistant", "content": assistant_response})
         self.save_conversation(active_session_id, conversation)
@@ -136,19 +136,7 @@ class TwinService:
         def generate() -> Iterator[str]:
             assistant_parts: list[str] = []
             try:
-                stream = self.client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    stream=True,
-                )
-
-                for chunk in stream:
-                    if not chunk.choices:
-                        continue
-                    delta = chunk.choices[0].delta
-                    content = getattr(delta, "content", None)
-                    if not content:
-                        continue
+                for content in self.llm_client.stream_complete(messages):
                     assistant_parts.append(content)
                     yield content
             finally:

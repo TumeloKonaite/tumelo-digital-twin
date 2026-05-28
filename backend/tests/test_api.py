@@ -42,20 +42,11 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(response.json(), {"status": "healthy"})
 
     def test_chat_endpoint(self):
-        create_mock = Mock(
-            return_value=Mock(
-                choices=[
-                    Mock(
-                        message=Mock(content="Mocked assistant reply"),
-                    )
-                ]
-            )
-        )
-        client_mock = Mock()
-        client_mock.chat.completions.create = create_mock
+        llm_client = Mock()
+        llm_client.complete.return_value = "Mocked assistant reply"
         self.app.state.twin_service = TwinService(
             settings=self.settings,
-            client=client_mock,
+            llm_client=llm_client,
             conversation_store=ConversationStore(self.memory_dir),
             prompt_builder=TwinPromptBuilder(),
             resource_loaders=self.resource_loaders,
@@ -70,8 +61,8 @@ class ApiTestCase(unittest.TestCase):
         self.assertEqual(payload["response"], "Mocked assistant reply")
         self.assertTrue(payload["session_id"])
 
-        create_mock.assert_called_once()
-        request_messages = create_mock.call_args.kwargs["messages"]
+        llm_client.complete.assert_called_once()
+        request_messages = llm_client.complete.call_args.args[0]
         self.assertEqual(request_messages[-1], {"role": "user", "content": "Hello there"})
 
         memory_file = self.memory_dir / f"{payload['session_id']}.json"
