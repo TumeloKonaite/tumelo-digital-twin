@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-openai
-pydantic-settings
-python-dotenv
-python-multipart
-boto3
-pypdf
-mangum

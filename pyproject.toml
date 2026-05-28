@@ -4,18 +4,21 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi>=0.133.0",
+    "openai>=2.23.0",
+    "pydantic-settings>=2.10.1",
+    "pypdf>=6.7.3",
+    "python-dotenv>=1.2.1",
+    "python-multipart>=0.0.22",
+    "uvicorn>=0.41.0",
+]
 
 [dependency-groups]
 test = [
     "httpx>=0.28.1",
     "pytest>=8.4.0",
     "pytest-asyncio>=1.0.0",
-]
-
-[tool.uv.workspace]
-members = [
-    "backend",
 ]
 
 [tool.pytest.ini_options]

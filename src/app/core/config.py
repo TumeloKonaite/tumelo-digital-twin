@@ -12,7 +12,6 @@ from .content_paths import default_content_data_dir, default_conversation_storag
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-BACKEND_DIR = PROJECT_ROOT / "backend"
 PERSISTENT_STORAGE_ROOT = Path("/persistent-storage")
 
 
@@ -25,7 +24,7 @@ def _default_content_data_dir() -> Path:
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=(str(PROJECT_ROOT / ".env"), str(BACKEND_DIR / ".env")),
+        env_file=(str(PROJECT_ROOT / ".env"),),
         env_file_encoding="utf-8",
         extra="ignore",
         populate_by_name=True,

@@ -1,8 +1,8 @@
 [cerebrium.deployment]
 name = "digital-twin-api"
 python_version = "3.12"
-include = ["./*", "../data/**/*", "main.py", "server.py", "requirements.txt", "cerebrium.toml"]
-exclude = [".*", "__pycache__", "*.pyc"]
+include = ["src/**/*", "data/**/*", "main.py", "requirements.txt", "cerebrium.toml"]
+exclude = [".*", "__pycache__", "*.pyc", "frontend/**/*", "tests/**/*"]
 # Browser clients cannot safely hold a Cerebrium JWT. Set to true only if this
 # endpoint is intentionally public and protected by your app-level auth/rate limits.
 disable_auth = true
