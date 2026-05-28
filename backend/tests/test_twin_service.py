@@ -10,7 +10,7 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from src.app.core.config import Settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import TwinService
+from src.app.domain.twin.service import ConversationStore, TwinResourceLoaders, TwinService
 
 
 class TwinServiceTestCase(unittest.TestCase):
@@ -21,6 +21,11 @@ class TwinServiceTestCase(unittest.TestCase):
         self.settings = Settings(
             openai_api_key="test-key",
             conversation_storage_dir=self.memory_dir,
+        )
+        self.conversation_store = ConversationStore(self.memory_dir)
+        self.resource_loaders = TwinResourceLoaders(
+            prompt_context=lambda: {},
+            fallback_personality=lambda: "Fallback personality",
         )
 
     def tearDown(self):
@@ -47,7 +52,9 @@ class TwinServiceTestCase(unittest.TestCase):
         service = TwinService(
             settings=self.settings,
             client=client_mock,
-            memory_dir=self.memory_dir,
+            conversation_store=self.conversation_store,
+            prompt_builder=TwinPromptBuilder(),
+            resource_loaders=self.resource_loaders,
             personality="Test personality",
         )
 
@@ -106,7 +113,9 @@ class TwinServiceTestCase(unittest.TestCase):
         service = TwinService(
             settings=self.settings,
             client=client_mock,
-            memory_dir=self.memory_dir,
+            conversation_store=self.conversation_store,
+            prompt_builder=TwinPromptBuilder(),
+            resource_loaders=self.resource_loaders,
             personality="Test personality",
         )
 
@@ -153,23 +162,27 @@ class TwinServiceTestCase(unittest.TestCase):
         prompt_builder = Mock(spec=TwinPromptBuilder)
         prompt_builder.build_system_prompt.return_value = "Built prompt   "
         client_mock = Mock()
-
-        with patch(
-            "backend.context.build_prompt_context",
+        prompt_context_loader = Mock(
             return_value={
                 "full_name": "Tumelo M",
                 "name": "Tumelo",
                 "style_heading": "Style guidelines:",
-            },
-        ) as context_mock:
-            service = TwinService(
-                settings=self.settings,
-                client=client_mock,
-                memory_dir=self.memory_dir,
-                prompt_builder=prompt_builder,
-            )
+            }
+        )
+        resource_loaders = TwinResourceLoaders(
+            prompt_context=prompt_context_loader,
+            fallback_personality=Mock(return_value="Fallback personality"),
+        )
 
-        context_mock.assert_called_once_with(data_dir=self.settings.content_data_dir)
+        service = TwinService(
+            settings=self.settings,
+            client=client_mock,
+            conversation_store=self.conversation_store,
+            prompt_builder=prompt_builder,
+            resource_loaders=resource_loaders,
+        )
+
+        prompt_context_loader.assert_called_once_with()
         prompt_builder.build_system_prompt.assert_called_once()
         self.assertEqual(
             prompt_builder.build_system_prompt.call_args.kwargs,

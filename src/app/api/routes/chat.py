@@ -1,33 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from src.app.api.schemas.chat import ChatRequest, ChatResponse
-from src.app.core.config import Settings
+from src.app.core.dependencies import get_twin_service
 from src.app.domain.twin.service import TwinService
 
 
 router = APIRouter()
 
-
-def get_settings(request: Request) -> Settings:
-    return request.app.state.settings
-
-
-def get_twin_service(
-    request: Request,
-    settings: Settings = Depends(get_settings),
-) -> TwinService:
-    _ = settings
-    return request.app.state.twin_service
-
-
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
-    service: TwinService = Depends(get_twin_service),
+    twin_service: TwinService = Depends(get_twin_service),
 ):
     try:
-        result = service.chat(request.message, request.session_id)
+        result = twin_service.chat(request.message, request.session_id)
         return ChatResponse(response=result.response, session_id=result.session_id)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -36,10 +23,10 @@ async def chat(
 @router.post("/chat/stream")
 async def chat_stream(
     request: ChatRequest,
-    service: TwinService = Depends(get_twin_service),
+    twin_service: TwinService = Depends(get_twin_service),
 ):
     try:
-        result = service.stream_chat(request.message, request.session_id)
+        result = twin_service.stream_chat(request.message, request.session_id)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -51,5 +38,5 @@ async def chat_stream(
 
 
 @router.get("/sessions")
-async def list_sessions(service: TwinService = Depends(get_twin_service)):
-    return {"sessions": service.list_sessions()}
+async def list_sessions(twin_service: TwinService = Depends(get_twin_service)):
+    return {"sessions": twin_service.list_sessions()}

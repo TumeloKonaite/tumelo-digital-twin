@@ -9,8 +9,10 @@ from fastapi.testclient import TestClient
 
 os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
+from src.app.core.dependencies import get_twin_service
 from src.app.core.config import Settings
-from src.app.domain.twin.service import ChatResult, TwinService
+from src.app.domain.twin.prompt_builder import TwinPromptBuilder
+from src.app.domain.twin.service import ChatResult, ConversationStore, TwinResourceLoaders, TwinService
 from src.app.main import create_app
 
 
@@ -25,6 +27,10 @@ class ApiTestCase(unittest.TestCase):
         )
         self.app = create_app(settings=self.settings)
         self.client = TestClient(self.app)
+        self.resource_loaders = TwinResourceLoaders(
+            prompt_context=lambda: {},
+            fallback_personality=lambda: "Fallback personality",
+        )
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -50,6 +56,9 @@ class ApiTestCase(unittest.TestCase):
         self.app.state.twin_service = TwinService(
             settings=self.settings,
             client=client_mock,
+            conversation_store=ConversationStore(self.memory_dir),
+            prompt_builder=TwinPromptBuilder(),
+            resource_loaders=self.resource_loaders,
             personality="Test personality",
         )
 
@@ -74,7 +83,7 @@ class ApiTestCase(unittest.TestCase):
             response="Delegated assistant reply",
             session_id="session-123",
         )
-        self.app.state.twin_service = service
+        self.app.dependency_overrides[get_twin_service] = lambda: service
 
         response = self.client.post("/chat", json={"message": "Hello there"})
 
@@ -84,3 +93,4 @@ class ApiTestCase(unittest.TestCase):
             {"response": "Delegated assistant reply", "session_id": "session-123"},
         )
         service.chat.assert_called_once_with("Hello there", None)
+        self.app.dependency_overrides.clear()
