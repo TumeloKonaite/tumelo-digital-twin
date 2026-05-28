@@ -8,6 +8,8 @@ from typing import Any, Iterator
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from .prompt_builder import TwinPromptBuilder
+
 
 BACKEND_DIR = Path(__file__).resolve().parents[4] / "backend"
 PROJECT_ROOT = BACKEND_DIR.parent
@@ -33,11 +35,13 @@ class TwinService:
         client: Any | None = None,
         memory_dir: Path | None = None,
         personality: str | None = None,
+        prompt_builder: TwinPromptBuilder | None = None,
         model: str = "gpt-4o-mini",
     ) -> None:
         self.client = client or OpenAI()
         self.memory_dir = Path(memory_dir) if memory_dir is not None else self.resolve_memory_dir()
         self.memory_dir.mkdir(parents=True, exist_ok=True)
+        self.prompt_builder = prompt_builder or TwinPromptBuilder()
         self.personality = personality if personality is not None else self.load_personality()
         self.model = model
 
@@ -56,12 +60,11 @@ class TwinService:
 
         return PROJECT_ROOT / "memory"
 
-    @staticmethod
-    def load_personality() -> str:
+    def load_personality(self) -> str:
         try:
-            from backend.context import prompt as build_prompt
+            from backend.context import build_prompt_context
 
-            return build_prompt().strip()
+            return self.prompt_builder.build_system_prompt(**build_prompt_context()).strip()
         except Exception:
             with open(BACKEND_DIR / "me.txt", "r", encoding="utf-8") as file:
                 return file.read().strip()
