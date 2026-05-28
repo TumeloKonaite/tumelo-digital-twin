@@ -48,7 +48,17 @@ class TwinService:
         self.conversation_store = conversation_store
         self.prompt_builder = prompt_builder
         self.resource_loaders = resource_loaders
-        self.personality = personality if personality is not None else self.load_personality()
+        self._personality = personality
+
+    @property
+    def personality(self) -> str:
+        if self._personality is None:
+            self._personality = self.load_personality()
+        return self._personality
+
+    @personality.setter
+    def personality(self, value: str) -> None:
+        self._personality = value
 
     def load_personality(self) -> str:
         try:

@@ -130,6 +130,7 @@ class TwinServiceTestCase(unittest.TestCase):
             resource_loaders=resource_loaders,
         )
 
+        self.assertEqual(service.personality, "Built prompt")
         prompt_context_loader.assert_called_once_with()
         prompt_builder.build_system_prompt.assert_called_once()
         self.assertEqual(
@@ -140,7 +141,30 @@ class TwinServiceTestCase(unittest.TestCase):
                 "style_heading": "Style guidelines:",
             },
         )
-        self.assertEqual(service.personality, "Built prompt")
+    def test_personality_loading_is_lazy_until_needed(self):
+        prompt_builder = Mock(spec=TwinPromptBuilder)
+        prompt_context_loader = Mock(return_value={"name": "Tumelo", "full_name": "Tumelo M"})
+        resource_loaders = TwinResourceLoaders(
+            prompt_context=prompt_context_loader,
+            fallback_personality=Mock(return_value="Fallback personality"),
+        )
+
+        service = TwinService(
+            settings=self.settings,
+            llm_client=Mock(),
+            conversation_store=self.conversation_store,
+            prompt_builder=prompt_builder,
+            resource_loaders=resource_loaders,
+        )
+
+        prompt_context_loader.assert_not_called()
+        prompt_builder.build_system_prompt.assert_not_called()
+        service.build_messages([], "Hello there")
+        prompt_context_loader.assert_called_once_with()
+        prompt_builder.build_system_prompt.assert_called_once_with(
+            name="Tumelo",
+            full_name="Tumelo M",
+        )
 
     def test_list_sessions_delegates_to_conversation_store(self):
         self.conversation_store.list_sessions.return_value = [

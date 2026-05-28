@@ -2,7 +2,6 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 from fastapi import Request
 from fastapi.testclient import TestClient
@@ -12,6 +11,8 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 
 from src.app.core.config import Settings
 from src.app.core.dependencies import (
+    build_content_loader,
+    build_facts_loader,
     build_resource_loaders,
     get_conversation_store,
     get_llm_client,
@@ -22,6 +23,7 @@ from src.app.core.dependencies import (
 )
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinService
+from src.app.infrastructure.content import FactsLoader, ResourceLoader
 from src.app.infrastructure.llm import OpenAIClient
 from src.app.infrastructure.storage import ConversationStore, FileConversationStore
 from src.app.main import create_app
@@ -73,6 +75,8 @@ class DependencyWiringTestCase(unittest.TestCase):
         self.assertIsInstance(self.app.state.llm_client, OpenAIClient)
         self.assertIsInstance(self.app.state.conversation_store, ConversationStore)
         self.assertIsInstance(self.app.state.conversation_store, FileConversationStore)
+        self.assertIsInstance(self.app.state.facts_loader, FactsLoader)
+        self.assertIsInstance(self.app.state.content_loader, ResourceLoader)
         self.assertIsInstance(self.app.state.prompt_builder, TwinPromptBuilder)
         self.assertIsInstance(self.app.state.twin_service, TwinService)
 
@@ -86,7 +90,7 @@ class DependencyWiringTestCase(unittest.TestCase):
         self.assertIs(get_prompt_builder(request), self.app.state.prompt_builder)
         self.assertIs(get_twin_service(request), self.app.state.twin_service)
 
-    def test_resource_loaders_use_configured_content_data_dir(self):
+    def test_content_loaders_use_configured_content_data_dir(self):
         content_data_dir = Path(self.temp_dir.name) / "content-data"
         content_data_dir.mkdir(parents=True, exist_ok=True)
         (content_data_dir / "fallback_personality.txt").write_text(
@@ -98,16 +102,19 @@ class DependencyWiringTestCase(unittest.TestCase):
             content_data_dir=content_data_dir,
         )
 
-        loaders = build_resource_loaders(settings)
+        facts_loader = build_facts_loader(settings)
+        content_loader = build_content_loader(settings, facts_loader=facts_loader)
+        loaders = build_resource_loaders(content_loader)
 
-        with patch("backend.context.build_prompt_context", return_value={"name": "Tumelo"}) as build_prompt_context:
-            self.assertEqual(loaders.prompt_context(), {"name": "Tumelo"})
-
+        self.assertEqual(facts_loader.path, content_data_dir / "twin_profile.json")
+        self.assertEqual(
+            content_loader.resolve_path("summary.txt"),
+            content_data_dir / "summary.txt",
+        )
         self.assertEqual(
             loaders.fallback_personality(),
             "Fallback from configured data directory",
         )
-        build_prompt_context.assert_called_once_with(data_dir=content_data_dir)
 
     def test_chat_route_uses_dependency_override(self):
         self.app.dependency_overrides[get_twin_service] = lambda: MockTwinService()

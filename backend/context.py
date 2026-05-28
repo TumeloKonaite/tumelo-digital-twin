@@ -1,62 +1,13 @@
 from datetime import datetime
 from pathlib import Path
 
-try:
-    from .resources import load_resources
-except ImportError:
-    from resources import load_resources
-
+from src.app.core.content_paths import resolve_data_dir
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-
-
-def _as_url(value: str | None) -> str | None:
-    if not value:
-        return None
-    if value.startswith(("http://", "https://")):
-        return value
-    return f"https://{value}"
-
-
-def _contact_block(email: str | None, linkedin_url: str | None, github_url: str | None) -> str:
-    items = []
-    if email:
-        items.append(f"- Email: {email}")
-    if linkedin_url:
-        items.append(f"- LinkedIn: {_as_url(linkedin_url)}")
-    if github_url:
-        items.append(f"- GitHub: {_as_url(github_url)}")
-
-    if not items:
-        return "No direct contact or profile links are available."
-
-    return "\n".join(items)
+from src.app.infrastructure.content import ResourceLoader
 
 
 def build_prompt_context(data_dir: Path | None = None, now: datetime | None = None) -> dict[str, str]:
-    resources = load_resources(data_dir)
-    facts = resources.facts
-    name = facts["name"]
-    rendered_datetime = (now or datetime.now()).strftime("%Y-%m-%d %H:%M:%S")
-
-    return {
-        "full_name": facts["full_name"],
-        "name": name,
-        "profile": str(facts),
-        "profile_heading": f"Here is some basic information about {name}:",
-        "summary": resources.summary,
-        "summary_heading": f"Here are summary notes from {name}:",
-        "linkedin": resources.linkedin,
-        "linkedin_heading": f"Here is the LinkedIn profile of {name}:",
-        "style": resources.style,
-        "style_heading": f"Here are some notes from {name} about their communications style:",
-        "contact_links": _contact_block(
-            email=facts.get("email"),
-            linkedin_url=facts.get("linkedin"),
-            github_url=facts.get("github"),
-        ),
-        "contact_links_heading": f"Here are direct contact/profile links for {name} (share these when asked):",
-        "current_datetime": rendered_datetime,
-    }
+    return ResourceLoader(data_dir=resolve_data_dir(data_dir)).build_prompt_context(now=now)
 
 
 def prompt(
