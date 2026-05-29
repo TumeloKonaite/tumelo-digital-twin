@@ -33,7 +33,7 @@ jobs:
     env:
       ENV: ${{ github.event.inputs.environment || (github.ref == 'refs/heads/main' && 'prod') || 'dev' }}
       CEREBRIUM_SERVICE_ACCOUNT_TOKEN: ${{ secrets.CEREBRIUM_SERVICE_ACCOUNT_TOKEN }}
-      CEREBRIUM_PROJECT_ID: ${{ vars.CEREBRIUM_PROJECT_ID }}
+      CEREBRIUM_PROJECT_ID: ${{ secrets.CEREBRIUM_PROJECT_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
