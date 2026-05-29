@@ -165,12 +165,13 @@ The Cerebrium setup below follows the official guide: [Cerebrium CI/CD Pipelines
 3. In the Cerebrium dashboard, open `API Keys`, create a Service Account for GitHub Actions, and copy the generated token.
 4. In GitHub, open your fork and go to `Settings -> Environments`.
 5. Create environments named `dev` and `prod`.
-6. In each environment, add these secrets:
+6. In each GitHub environment, add this secret:
    - `CEREBRIUM_SERVICE_ACCOUNT_TOKEN`
+7. In each GitHub environment, add this variable:
    - `CEREBRIUM_PROJECT_ID`
-7. Set the `dev` environment's `CEREBRIUM_PROJECT_ID` to your development Cerebrium project, and the `prod` environment's value to your production project.
-8. In Cerebrium, configure your runtime app secrets, including `OPENAI_API_KEY`.
-9. Push to `main` to deploy production, or use `workflow_dispatch` to trigger a manual `dev` or `prod` deployment from the Actions tab.
+8. Set the `dev` environment's `CEREBRIUM_PROJECT_ID` to your development Cerebrium project, and the `prod` environment's value to your production project.
+9. In Cerebrium, configure your runtime app secrets, including `OPENAI_API_KEY`.
+10. Push to `main` to deploy production, or use `workflow_dispatch` to trigger a manual `dev` or `prod` deployment from the Actions tab.
 
 ### Current Workflow Behavior
 
