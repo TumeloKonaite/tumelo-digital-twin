@@ -10,7 +10,6 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 from .content_paths import default_content_data_dir, default_conversation_storage_dir
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 PERSISTENT_STORAGE_ROOT = Path("/persistent-storage")
 
@@ -101,7 +100,9 @@ class Settings(BaseSettings):
 
         if normalized.startswith("["):
             parsed = json.loads(normalized)
-            if not isinstance(parsed, list) or not all(isinstance(item, str) for item in parsed):
+            if not isinstance(parsed, list) or not all(
+                isinstance(item, str) for item in parsed
+            ):
                 raise ValueError("CORS_ORIGINS JSON value must be a list of strings")
             return parsed
 

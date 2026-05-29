@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from fastapi import FastAPI, Request
 
-from src.app.core.config import Settings, get_settings as load_settings
+from src.app.core.config import Settings
+from src.app.core.config import get_settings as load_settings
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
 from src.app.infrastructure.content import FactsLoader, ResourceLoader

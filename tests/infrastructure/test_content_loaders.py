@@ -9,11 +9,15 @@ import pytest
 
 from src.app.core.content_paths import (
     LINKEDIN_FILENAME,
-    SUMMARY_FILENAME,
     STYLE_FILENAME,
+    SUMMARY_FILENAME,
     TWIN_PROFILE_FILENAME,
 )
-from src.app.infrastructure.content import FactsLoader, InvalidContentError, MissingContentError, ResourceLoader
+from src.app.infrastructure.content import (
+    FactsLoader,
+    InvalidContentError,
+    ResourceLoader,
+)
 from src.app.infrastructure.content.resource_loader import LINKEDIN_NOT_AVAILABLE
 
 
@@ -59,7 +63,9 @@ def test_resource_loader_reads_summary_style_and_fallback(tmp_path: Path) -> Non
     data_dir.mkdir()
     (data_dir / SUMMARY_FILENAME).write_text("Summary text", encoding="utf-8")
     (data_dir / STYLE_FILENAME).write_text("Style text", encoding="utf-8")
-    (data_dir / "fallback_personality.txt").write_text("Fallback text", encoding="utf-8")
+    (data_dir / "fallback_personality.txt").write_text(
+        "Fallback text", encoding="utf-8"
+    )
 
     loader = ResourceLoader(data_dir)
 
@@ -87,7 +93,9 @@ def test_resource_loader_extracts_text_from_linkedin_pdf(tmp_path: Path) -> None
         Mock(extract_text=Mock(return_value="Page two")),
     ]
 
-    with patch("src.app.infrastructure.content.resource_loader.PdfReader", return_value=reader) as pdf_reader:
+    with patch(
+        "src.app.infrastructure.content.resource_loader.PdfReader", return_value=reader
+    ) as pdf_reader:
         linkedin = ResourceLoader(data_dir).load_linkedin()
 
     assert linkedin == "Page one Page two"

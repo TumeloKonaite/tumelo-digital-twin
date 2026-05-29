@@ -28,7 +28,9 @@ def test_save_writes_conversation_history(tmp_path: Path) -> None:
 
     store.save("session-1", conversation)
 
-    saved_conversation = json.loads((tmp_path / "session-1.json").read_text(encoding="utf-8"))
+    saved_conversation = json.loads(
+        (tmp_path / "session-1.json").read_text(encoding="utf-8")
+    )
     assert saved_conversation == conversation
 
 

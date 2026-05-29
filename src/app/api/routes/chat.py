@@ -5,8 +5,8 @@ from src.app.api.schemas.chat import ChatRequest, ChatResponse
 from src.app.core.dependencies import get_twin_service
 from src.app.domain.twin.service import TwinService
 
-
 router = APIRouter()
+
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(

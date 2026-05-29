@@ -48,7 +48,9 @@ class TwinPromptBuilder:
             "## Important Context"
         )
 
-    def inject_style(self, style: str | None, heading: str = "Style guidelines:") -> str:
+    def inject_style(
+        self, style: str | None, heading: str = "Style guidelines:"
+    ) -> str:
         if not style or not style.strip():
             return ""
         return f"{heading}\n{style.strip()}"
@@ -108,10 +110,7 @@ class TwinPromptBuilder:
         if not rendered_datetime:
             return ""
 
-        return (
-            "For reference, here is the current date and time:\n"
-            f"{rendered_datetime}"
-        )
+        return f"For reference, here is the current date and time:\n{rendered_datetime}"
 
     def _task_section(self, *, full_name: str, name: str) -> str:
         return (

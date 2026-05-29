@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      CONTENT_DATA_DIR: /app/data
+      CONVERSATION_STORAGE_DIR: /app/data/conversations
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-test-key}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./main.py:/app/main.py
+      - ./data:/app/data
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

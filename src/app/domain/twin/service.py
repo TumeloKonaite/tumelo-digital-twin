@@ -1,7 +1,7 @@
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 from src.app.core.config import Settings
 from src.app.infrastructure.storage import ConversationStore
@@ -113,7 +113,9 @@ class TwinService:
                 assistant_response = "".join(assistant_parts).strip()
                 if assistant_response:
                     conversation.append({"role": "user", "content": user_message})
-                    conversation.append({"role": "assistant", "content": assistant_response})
+                    conversation.append(
+                        {"role": "assistant", "content": assistant_response}
+                    )
                     self.conversation_store.save(active_session_id, conversation)
 
         return StreamingChatResult(session_id=active_session_id, stream=generate())

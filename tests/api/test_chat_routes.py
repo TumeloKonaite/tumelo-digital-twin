@@ -32,7 +32,9 @@ def test_chat_route_returns_service_response(client, twin_service_override) -> N
     twin_service_override.chat.assert_called_once_with("Hello there", None)
 
 
-def test_chat_route_returns_500_when_service_fails(client, twin_service_override) -> None:
+def test_chat_route_returns_500_when_service_fails(
+    client, twin_service_override
+) -> None:
     twin_service_override.chat.side_effect = RuntimeError("llm unavailable")
 
     response = client.post("/chat", json={"message": "Hello there"})
@@ -41,7 +43,9 @@ def test_chat_route_returns_500_when_service_fails(client, twin_service_override
     assert response.json() == {"detail": "llm unavailable"}
 
 
-def test_chat_stream_route_returns_streamed_response(client, twin_service_override) -> None:
+def test_chat_stream_route_returns_streamed_response(
+    client, twin_service_override
+) -> None:
     twin_service_override.stream_chat.return_value = StreamingChatResult(
         session_id="stream-session",
         stream=iter(["Mocked ", "stream"]),
@@ -62,7 +66,9 @@ def test_chat_stream_route_returns_streamed_response(client, twin_service_overri
     )
 
 
-def test_list_sessions_route_returns_service_sessions(client, twin_service_override) -> None:
+def test_list_sessions_route_returns_service_sessions(
+    client, twin_service_override
+) -> None:
     twin_service_override.list_sessions.return_value = [
         {
             "session_id": "session-1",
