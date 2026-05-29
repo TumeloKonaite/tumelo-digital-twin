@@ -4,7 +4,6 @@ from unittest.mock import Mock
 
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
-
 from src.app.infrastructure.storage import ConversationStore
 
 
