@@ -48,6 +48,10 @@ class Settings(BaseSettings):
         ge=0,
         validation_alias=AliasChoices("OPENAI_MAX_RETRIES"),
     )
+    database_url: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("DATABASE_URL"),
+    )
     content_data_dir: Path = Field(
         default_factory=_default_content_data_dir,
         validation_alias=AliasChoices("CONTENT_DATA_DIR"),
