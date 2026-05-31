@@ -62,7 +62,9 @@ def alembic_test_connection(
         connection.commit()
     except OperationalError:
         engine.dispose()
-        pytest.skip("PostgreSQL migration tests require network access to DATABASE_URL.")
+        pytest.skip(
+            "PostgreSQL migration tests require network access to DATABASE_URL."
+        )
 
     config = Config(str(ALEMBIC_INI_PATH))
     config.attributes["connection"] = connection
