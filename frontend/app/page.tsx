@@ -1,3 +1,4 @@
+import ContactForm from '@/components/contact-form';
 import Twin from '@/components/twin';
 
 const CERTIFICATIONS = [
@@ -66,6 +67,8 @@ export default function Home() {
         <div className="h-[680px] sm:h-[720px]">
           <Twin />
         </div>
+
+        <ContactForm />
 
         <footer className="mt-6 text-center text-sm text-slate-500">
           <p>Thanks for taking the time to explore my work.</p>
