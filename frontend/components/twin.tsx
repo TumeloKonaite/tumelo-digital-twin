@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Award } from 'lucide-react';
 
+import { API_BASE_URL } from '@/lib/api';
+
 interface Message {
     id: string;
     role: 'user' | 'assistant';
@@ -10,7 +12,6 @@ interface Message {
     timestamp: Date;
 }
 
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000').replace(/\/$/, '');
 const AWS_CERTIFICATIONS = [
     'Generative AI Developer - Professional',
     'ML Engineer - Associate',

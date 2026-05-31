@@ -56,6 +56,35 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("CONVERSATION_STORAGE_DIR", "MEMORY_DIR"),
     )
+    smtp_host: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SMTP_HOST"),
+    )
+    smtp_port: int = Field(
+        default=587,
+        gt=0,
+        validation_alias=AliasChoices("SMTP_PORT"),
+    )
+    smtp_username: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SMTP_USERNAME"),
+    )
+    smtp_password: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SMTP_PASSWORD"),
+    )
+    smtp_from_email: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SMTP_FROM_EMAIL"),
+    )
+    contact_to_email: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("CONTACT_TO_EMAIL"),
+    )
+    smtp_use_tls: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("SMTP_USE_TLS"),
+    )
     cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:3000"],
         validation_alias=AliasChoices("CORS_ORIGINS"),
