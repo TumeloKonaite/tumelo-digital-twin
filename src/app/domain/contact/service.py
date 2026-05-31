@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from src.app.domain.contact.models import ContactSubmission
+from src.app.domain.contact.repository import ContactRepository
 from src.app.infrastructure.email import EmailDeliveryError, EmailSender
 
 
@@ -9,11 +10,19 @@ class ContactServiceError(Exception):
 
 
 class ContactService:
-    def __init__(self, email_sender: EmailSender) -> None:
+    def __init__(
+        self,
+        email_sender: EmailSender,
+        repository: ContactRepository,
+    ) -> None:
         self._email_sender = email_sender
+        self._repository = repository
 
     def submit_contact_request(self, submission: ContactSubmission) -> None:
+        submission_id = self._repository.create(submission)
         try:
             self._email_sender.send_contact_request(submission)
         except EmailDeliveryError as exc:
+            self._repository.mark_email_failed(submission_id, str(exc) or None)
             raise ContactServiceError("Unable to send contact request.") from exc
+        self._repository.mark_email_sent(submission_id)
