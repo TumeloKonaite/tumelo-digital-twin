@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from sqlalchemy.orm import Session
 
 from src.app.infrastructure.database import (
@@ -7,6 +9,7 @@ from src.app.infrastructure.database import (
     create_database_engine,
     create_session_factory,
 )
+from src.app.infrastructure.database import session as database_session
 
 
 def test_database_models_import_successfully() -> None:
@@ -33,6 +36,35 @@ def test_session_factory_can_be_created_from_database_url() -> None:
         assert session.expire_on_commit is False
     finally:
         session.close()
+
+
+def test_database_url_can_be_loaded_from_dotenv(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "DATABASE_URL=postgresql+psycopg://user:pass@localhost/from-dotenv\n",
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setattr(database_session, "ENV_FILE_PATH", env_file)
+
+    assert (
+        database_session.get_database_url()
+        == "postgresql+psycopg://user:pass@localhost/from-dotenv"
+    )
+
+
+def test_database_url_is_normalized_for_psycopg_driver() -> None:
+    assert (
+        database_session.get_database_url("postgresql://user:pass@localhost/test_db")
+        == "postgresql+psycopg://user:pass@localhost/test_db"
+    )
+    assert (
+        database_session.get_database_url("postgres://user:pass@localhost/test_db")
+        == "postgresql+psycopg://user:pass@localhost/test_db"
+    )
 
 
 def test_contact_submission_model_has_expected_columns() -> None:
