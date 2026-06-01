@@ -23,6 +23,38 @@ const INITIAL_VALUES: ContactFormValues = {
   message: '',
 };
 
+type ContactErrorPayload = {
+  detail?: string | Array<{ loc?: Array<string | number>; msg?: string }>;
+  message?: string;
+};
+
+function formatContactError(payload: ContactErrorPayload | null): string {
+  if (!payload) {
+    return 'Unable to send contact request.';
+  }
+
+  if (typeof payload.detail === 'string' && payload.detail.trim()) {
+    return payload.detail;
+  }
+
+  if (Array.isArray(payload.detail) && payload.detail.length > 0) {
+    return payload.detail
+      .map(item => {
+        const field = item.loc?.[item.loc.length - 1];
+        const label =
+          typeof field === 'string' ? field.replaceAll('_', ' ') : 'field';
+        return item.msg ? `${label}: ${item.msg}` : `${label}: invalid value`;
+      })
+      .join(' ');
+  }
+
+  if (typeof payload.message === 'string' && payload.message.trim()) {
+    return payload.message;
+  }
+
+  return 'Unable to send contact request.';
+}
+
 export default function ContactForm() {
   const [values, setValues] = useState<ContactFormValues>(INITIAL_VALUES);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,10 +88,10 @@ export default function ContactForm() {
         }),
       });
 
-      const payload = await response.json().catch(() => null);
+      const payload = (await response.json().catch(() => null)) as ContactErrorPayload | null;
 
       if (!response.ok) {
-        throw new Error(payload?.detail ?? 'Unable to send contact request.');
+        throw new Error(formatContactError(payload));
       }
 
       setValues(INITIAL_VALUES);
@@ -129,6 +161,8 @@ export default function ContactForm() {
                 name="firstName"
                 value={values.firstName}
                 onChange={handleChange}
+                minLength={1}
+                maxLength={100}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
               />
             </label>
@@ -140,6 +174,8 @@ export default function ContactForm() {
                 name="lastName"
                 value={values.lastName}
                 onChange={handleChange}
+                minLength={1}
+                maxLength={100}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
               />
             </label>
@@ -154,6 +190,8 @@ export default function ContactForm() {
                 name="email"
                 value={values.email}
                 onChange={handleChange}
+                minLength={3}
+                maxLength={320}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
               />
             </label>
@@ -165,6 +203,8 @@ export default function ContactForm() {
                 name="phone"
                 value={values.phone}
                 onChange={handleChange}
+                minLength={7}
+                maxLength={32}
                 className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
               />
             </label>
@@ -177,8 +217,11 @@ export default function ContactForm() {
               name="subject"
               value={values.subject}
               onChange={handleChange}
+              minLength={3}
+              maxLength={200}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
             />
+            <p className="text-xs text-slate-500">Minimum 3 characters.</p>
           </label>
 
           <label className="block space-y-2">
@@ -189,8 +232,11 @@ export default function ContactForm() {
               value={values.message}
               onChange={handleChange}
               rows={6}
+              minLength={10}
+              maxLength={5000}
               className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
             />
+            <p className="text-xs text-slate-500">Minimum 10 characters.</p>
           </label>
 
           {status && (

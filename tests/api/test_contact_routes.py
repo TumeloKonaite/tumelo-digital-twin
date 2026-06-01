@@ -82,3 +82,30 @@ def test_contact_route_rejects_invalid_payload(
 
     assert response.status_code == 422
     contact_service_override.submit_contact_request.assert_not_called()
+
+
+def test_contact_route_resolves_contact_service_from_app_state(client, app) -> None:
+    payload = {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "email": "jane@example.com",
+        "phone": "+27 82 123 4567",
+        "subject": "Interested in working together",
+        "message": "I would like to discuss a role with you.",
+    }
+    submit_contact_request = Mock()
+    app.state.dependencies.contact_service.submit_contact_request = submit_contact_request
+
+    response = client.post("/api/contact", json=payload)
+
+    assert response.status_code == 200
+    submit_contact_request.assert_called_once_with(
+        ContactSubmission(
+            first_name="Jane",
+            last_name="Doe",
+            email="jane@example.com",
+            phone="+27 82 123 4567",
+            subject="Interested in working together",
+            message="I would like to discuss a role with you.",
+        )
+    )
