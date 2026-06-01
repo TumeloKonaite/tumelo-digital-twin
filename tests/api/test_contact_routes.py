@@ -94,7 +94,9 @@ def test_contact_route_resolves_contact_service_from_app_state(client, app) -> N
         "message": "I would like to discuss a role with you.",
     }
     submit_contact_request = Mock()
-    app.state.dependencies.contact_service.submit_contact_request = submit_contact_request
+    app.state.dependencies.contact_service.submit_contact_request = (
+        submit_contact_request
+    )
 
     response = client.post("/api/contact", json=payload)
 
