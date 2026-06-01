@@ -1,16 +1,25 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, Request
 
 from src.app.core.config import Settings
 from src.app.core.config import get_settings as load_settings
-from src.app.domain.contact import ContactService
+from src.app.domain.contact import ContactRepository, ContactService
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
+from src.app.infrastructure.contact import (
+    NullContactRepository,
+    PostgresContactRepository,
+)
 from src.app.infrastructure.content import FactsLoader, ResourceLoader
+from src.app.infrastructure.database import create_session_factory
 from src.app.infrastructure.email import EmailSender, SMTPEmailSender
 from src.app.infrastructure.llm import OpenAIClient
 from src.app.infrastructure.storage import ConversationStore, FileConversationStore
+
+logger = logging.getLogger(__name__)
 
 
 def build_llm_client(settings: Settings) -> OpenAIClient:
@@ -33,8 +42,25 @@ def build_email_sender(settings: Settings) -> EmailSender:
     )
 
 
-def build_contact_service(email_sender: EmailSender) -> ContactService:
-    return ContactService(email_sender=email_sender)
+def build_contact_repository(settings: Settings) -> ContactRepository:
+    if not settings.database_url:
+        logger.warning(
+            "DATABASE_URL is not configured; contact submissions will not be persisted."
+        )
+        return NullContactRepository()
+
+    session_factory = create_session_factory(settings.database_url)
+    return PostgresContactRepository(session_factory=session_factory)
+
+
+def build_contact_service(
+    email_sender: EmailSender,
+    repository: ContactRepository,
+) -> ContactService:
+    return ContactService(
+        email_sender=email_sender,
+        repository=repository,
+    )
 
 
 def build_facts_loader(settings: Settings) -> FactsLoader:
@@ -83,7 +109,8 @@ def initialize_dependencies(app: FastAPI, settings: Settings | None = None) -> N
     llm_client = build_llm_client(runtime_settings)
     conversation_store = build_conversation_store(runtime_settings)
     email_sender = build_email_sender(runtime_settings)
-    contact_service = build_contact_service(email_sender)
+    contact_repository = build_contact_repository(runtime_settings)
+    contact_service = build_contact_service(email_sender, contact_repository)
     facts_loader = build_facts_loader(runtime_settings)
     content_loader = build_content_loader(runtime_settings, facts_loader=facts_loader)
     resource_loaders = build_resource_loaders(content_loader)
@@ -100,6 +127,7 @@ def initialize_dependencies(app: FastAPI, settings: Settings | None = None) -> N
     app.state.llm_client = llm_client
     app.state.conversation_store = conversation_store
     app.state.email_sender = email_sender
+    app.state.contact_repository = contact_repository
     app.state.contact_service = contact_service
     app.state.facts_loader = facts_loader
     app.state.content_loader = content_loader
@@ -122,6 +150,10 @@ def get_conversation_store(request: Request) -> ConversationStore:
 
 def get_email_sender(request: Request) -> EmailSender:
     return request.app.state.email_sender
+
+
+def get_contact_repository(request: Request) -> ContactRepository:
+    return request.app.state.contact_repository
 
 
 def get_contact_service(request: Request) -> ContactService:

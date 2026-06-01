@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from unittest.mock import Mock
+from uuid import uuid4
 
 import pytest
 
@@ -14,7 +15,9 @@ from src.app.infrastructure.email import EmailDeliveryError
 
 def test_contact_service_submits_contact_request() -> None:
     email_sender = Mock()
-    service = ContactService(email_sender=email_sender)
+    repository = Mock()
+    repository.create.return_value = uuid4()
+    service = ContactService(email_sender=email_sender, repository=repository)
     submission = ContactSubmission(
         first_name="Jane",
         last_name="Doe",
@@ -26,12 +29,17 @@ def test_contact_service_submits_contact_request() -> None:
 
     service.submit_contact_request(submission)
 
+    repository.create.assert_called_once_with(submission)
     email_sender.send_contact_request.assert_called_once_with(submission)
+    repository.mark_email_sent.assert_called_once_with(repository.create.return_value)
+    repository.mark_email_failed.assert_not_called()
 
 
 def test_contact_service_raises_safe_error_when_email_delivery_fails() -> None:
     email_sender = Mock()
-    service = ContactService(email_sender=email_sender)
+    repository = Mock()
+    repository.create.return_value = uuid4()
+    service = ContactService(email_sender=email_sender, repository=repository)
     submission = ContactSubmission(
         first_name="Jane",
         last_name="Doe",
@@ -44,3 +52,10 @@ def test_contact_service_raises_safe_error_when_email_delivery_fails() -> None:
 
     with pytest.raises(ContactServiceError, match="Unable to send contact request."):
         service.submit_contact_request(submission)
+
+    repository.create.assert_called_once_with(submission)
+    repository.mark_email_failed.assert_called_once_with(
+        repository.create.return_value,
+        "smtp failure",
+    )
+    repository.mark_email_sent.assert_not_called()

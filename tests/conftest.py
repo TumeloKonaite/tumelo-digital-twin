@@ -41,6 +41,7 @@ def content_data_dir(tmp_path: Path) -> Path:
 def settings(content_data_dir: Path) -> Settings:
     return Settings(
         openai_api_key="test-key",
+        database_url="sqlite+pysqlite:///:memory:",
         content_data_dir=content_data_dir,
         conversation_storage_dir=content_data_dir / "conversations",
     )

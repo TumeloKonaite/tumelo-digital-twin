@@ -63,6 +63,7 @@ Optional environment variables:
 - `OPENAI_MODEL`: defaults to `gpt-4o-mini`
 - `OPENAI_TIMEOUT_SECONDS`: defaults to `30`
 - `OPENAI_MAX_RETRIES`: defaults to `2`
+- `DATABASE_URL`: enables contact submission persistence; when unset, the API still starts but contact submissions are not stored
 - `CONTENT_DATA_DIR`: defaults to `data` in the repo root, or `/persistent-storage/data` when that directory exists
 - `CONVERSATION_STORAGE_DIR`: defaults to `CONTENT_DATA_DIR/conversations`
 - `CORS_ORIGINS`: comma-separated list or JSON array, defaults to `http://localhost:3000`
@@ -171,6 +172,7 @@ The Cerebrium setup below follows the official guide: [Cerebrium CI/CD Pipelines
    - `CEREBRIUM_PROJECT_ID`
 8. Set the `dev` environment's `CEREBRIUM_PROJECT_ID` to your development Cerebrium project, and the `prod` environment's value to your production project.
 9. In Cerebrium, configure your runtime app secrets, including `OPENAI_API_KEY`.
+10. Add `DATABASE_URL` as a runtime secret if you want contact submissions persisted to PostgreSQL.
 10. Push to `main` to deploy production, or use `workflow_dispatch` to trigger a manual `dev` or `prod` deployment from the Actions tab.
 
 ### Current Workflow Behavior
