@@ -10,14 +10,17 @@ from src.app.api.routes.chat import router as chat_router
 from src.app.api.routes.contact import router as contact_router
 from src.app.api.routes.health import router as health_router
 from src.app.core.config import Settings
-from src.app.core.dependencies import initialize_dependencies
+from src.app.core.dependencies import initialize_dependencies, shutdown_dependencies
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         initialize_dependencies(app, settings=settings)
-        yield
+        try:
+            yield
+        finally:
+            shutdown_dependencies(app)
 
     app = FastAPI(lifespan=lifespan)
 
