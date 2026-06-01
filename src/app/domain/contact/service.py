@@ -19,7 +19,11 @@ class ContactService:
         self._repository = repository
 
     def submit_contact_request(self, submission: ContactSubmission) -> None:
-        submission_id = self._repository.create(submission)
+        try:
+            submission_id = self._repository.create(submission)
+        except Exception as exc:
+            raise ContactServiceError("Unable to send contact request.") from exc
+
         try:
             self._email_sender.send_contact_request(submission)
         except EmailDeliveryError as exc:
