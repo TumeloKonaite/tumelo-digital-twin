@@ -22,9 +22,7 @@ def test_contact_service_submits_contact_request(contact_submission) -> None:
 
     repository.create.assert_called_once_with(contact_submission)
     email_sender.send_contact_request.assert_called_once_with(contact_submission)
-    repository.mark_email_sent.assert_called_once_with(
-        repository.create.return_value
-    )
+    repository.mark_email_sent.assert_called_once_with(repository.create.return_value)
     repository.mark_email_failed.assert_not_called()
     assert tracker.mock_calls == [
         call.repository.create(contact_submission),
