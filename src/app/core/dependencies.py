@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, Request
 
 from src.app.core.config import Settings
@@ -7,12 +9,17 @@ from src.app.core.config import get_settings as load_settings
 from src.app.domain.contact import ContactRepository, ContactService
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
-from src.app.infrastructure.contact import PostgresContactRepository
+from src.app.infrastructure.contact import (
+    NullContactRepository,
+    PostgresContactRepository,
+)
 from src.app.infrastructure.content import FactsLoader, ResourceLoader
 from src.app.infrastructure.database import create_session_factory
 from src.app.infrastructure.email import EmailSender, SMTPEmailSender
 from src.app.infrastructure.llm import OpenAIClient
 from src.app.infrastructure.storage import ConversationStore, FileConversationStore
+
+logger = logging.getLogger(__name__)
 
 
 def build_llm_client(settings: Settings) -> OpenAIClient:
@@ -36,6 +43,12 @@ def build_email_sender(settings: Settings) -> EmailSender:
 
 
 def build_contact_repository(settings: Settings) -> ContactRepository:
+    if not settings.database_url:
+        logger.warning(
+            "DATABASE_URL is not configured; contact submissions will not be persisted."
+        )
+        return NullContactRepository()
+
     session_factory = create_session_factory(settings.database_url)
     return PostgresContactRepository(session_factory=session_factory)
 
