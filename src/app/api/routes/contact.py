@@ -18,7 +18,7 @@ router = APIRouter()
     response_model=ContactResponse,
     status_code=status.HTTP_200_OK,
 )
-async def submit_contact_request(
+def submit_contact_request(
     request: ContactRequest,
     contact_service: ContactService = Depends(get_contact_service),
 ) -> ContactResponse:
