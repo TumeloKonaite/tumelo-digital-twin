@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.app.domain.contact import ContactSubmission
 from src.app.infrastructure.contact import PostgresContactRepository
 from src.app.infrastructure.database import (
     Base,
@@ -22,41 +21,36 @@ def _build_repository(tmp_path: Path) -> tuple[PostgresContactRepository, str]:
     return PostgresContactRepository(session_factory=session_factory), database_url
 
 
-def _submission() -> ContactSubmission:
-    return ContactSubmission(
-        first_name="Jane",
-        last_name="Doe",
-        email="jane@example.com",
-        phone="+27 82 123 4567",
-        subject="Interested in working together",
-        message="I would like to discuss a role with you.",
-    )
-
-
-def test_create_persists_contact_submission(tmp_path: Path) -> None:
+def test_create_persists_contact_submission(
+    tmp_path: Path,
+    contact_submission,
+) -> None:
     repository, database_url = _build_repository(tmp_path)
 
-    submission_id = repository.create(_submission())
+    submission_id = repository.create(contact_submission)
 
     session_factory = create_session_factory(database_url)
     with session_factory() as session:
         record = session.get(ContactSubmissionModel, submission_id)
 
     assert record is not None
-    assert record.first_name == "Jane"
-    assert record.last_name == "Doe"
-    assert record.email == "jane@example.com"
-    assert record.phone == "+27 82 123 4567"
-    assert record.subject == "Interested in working together"
-    assert record.message == "I would like to discuss a role with you."
+    assert record.first_name == contact_submission.first_name
+    assert record.last_name == contact_submission.last_name
+    assert record.email == contact_submission.email
+    assert record.phone == contact_submission.phone
+    assert record.subject == contact_submission.subject
+    assert record.message == contact_submission.message
     assert record.email_status == "pending"
     assert record.email_error is None
     assert record.emailed_at is None
 
 
-def test_mark_email_sent_updates_delivery_fields(tmp_path: Path) -> None:
+def test_mark_email_sent_updates_delivery_fields(
+    tmp_path: Path,
+    contact_submission,
+) -> None:
     repository, database_url = _build_repository(tmp_path)
-    submission_id = repository.create(_submission())
+    submission_id = repository.create(contact_submission)
     repository.mark_email_failed(submission_id, "transient smtp failure")
 
     repository.mark_email_sent(submission_id)
@@ -71,9 +65,12 @@ def test_mark_email_sent_updates_delivery_fields(tmp_path: Path) -> None:
     assert record.email_error is None
 
 
-def test_mark_email_failed_updates_delivery_fields(tmp_path: Path) -> None:
+def test_mark_email_failed_updates_delivery_fields(
+    tmp_path: Path,
+    contact_submission,
+) -> None:
     repository, database_url = _build_repository(tmp_path)
-    submission_id = repository.create(_submission())
+    submission_id = repository.create(contact_submission)
 
     repository.mark_email_failed(submission_id, "smtp failure")
 

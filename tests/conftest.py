@@ -7,6 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.app.core.config import Settings
+from src.app.domain.contact import ContactSubmission
 from src.app.main import create_app
 
 
@@ -56,3 +57,27 @@ def app(settings: Settings):
 def client(app):
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def contact_payload() -> dict[str, str]:
+    return {
+        "first_name": "Jane",
+        "last_name": "Doe",
+        "email": "Jane@Example.com",
+        "phone": "+27 82 123 4567",
+        "subject": "Interested in working together",
+        "message": "I would like to discuss a role with you.",
+    }
+
+
+@pytest.fixture
+def contact_submission() -> ContactSubmission:
+    return ContactSubmission(
+        first_name="Jane",
+        last_name="Doe",
+        email="jane@example.com",
+        phone="+27 82 123 4567",
+        subject="Interested in working together",
+        message="I would like to discuss a role with you.",
+    )
