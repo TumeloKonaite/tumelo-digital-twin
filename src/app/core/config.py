@@ -89,6 +89,11 @@ class Settings(BaseSettings):
         default=True,
         validation_alias=AliasChoices("SMTP_USE_TLS"),
     )
+    smtp_timeout_seconds: float = Field(
+        default=10.0,
+        gt=0,
+        validation_alias=AliasChoices("SMTP_TIMEOUT_SECONDS"),
+    )
     cors_origins: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["http://localhost:3000"],
         validation_alias=AliasChoices("CORS_ORIGINS"),

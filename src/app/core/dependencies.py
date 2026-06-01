@@ -62,6 +62,7 @@ def build_email_sender(settings: Settings) -> EmailSender:
         from_email=settings.smtp_from_email,
         to_email=settings.contact_to_email,
         use_tls=settings.smtp_use_tls,
+        timeout_seconds=settings.smtp_timeout_seconds,
     )
 
 

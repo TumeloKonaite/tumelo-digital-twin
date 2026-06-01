@@ -16,6 +16,7 @@ class SMTPEmailSender:
         from_email: str | None,
         to_email: str | None,
         use_tls: bool,
+        timeout_seconds: float = 10.0,
     ) -> None:
         self._host = host
         self._port = port
@@ -24,13 +25,18 @@ class SMTPEmailSender:
         self._from_email = from_email
         self._to_email = to_email
         self._use_tls = use_tls
+        self._timeout_seconds = timeout_seconds
 
     def send_contact_request(self, submission: ContactSubmission) -> None:
         self._validate_configuration()
         message = self._build_message(submission)
 
         try:
-            with smtplib.SMTP(self._host, self._port, timeout=30) as client:
+            with smtplib.SMTP(
+                self._host,
+                self._port,
+                timeout=self._timeout_seconds,
+            ) as client:
                 client.ehlo()
                 if self._use_tls:
                     client.starttls()
@@ -69,6 +75,8 @@ class SMTPEmailSender:
         if not self._host or not self._from_email or not self._to_email:
             raise EmailDeliveryError("Unable to send contact request.")
         if self._port <= 0:
+            raise EmailDeliveryError("Unable to send contact request.")
+        if self._timeout_seconds <= 0:
             raise EmailDeliveryError("Unable to send contact request.")
         if bool(self._username) != bool(self._password):
             raise EmailDeliveryError("Unable to send contact request.")

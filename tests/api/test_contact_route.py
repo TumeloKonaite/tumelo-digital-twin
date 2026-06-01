@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from src.app.core.dependencies import get_contact_service
-from src.app.domain.contact import ContactServiceError, ContactSubmission
+from src.app.domain.contact import ContactServiceError
 
 
 @pytest.fixture
