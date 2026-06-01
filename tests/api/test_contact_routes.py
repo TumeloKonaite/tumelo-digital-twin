@@ -101,6 +101,7 @@ def test_contact_route_resolves_contact_service_from_app_state(client, app) -> N
     response = client.post("/api/contact", json=payload)
 
     assert response.status_code == 200
+    assert response.json() == {"message": "Contact request submitted successfully."}
     submit_contact_request.assert_called_once_with(
         ContactSubmission(
             first_name="Jane",
@@ -111,3 +112,21 @@ def test_contact_route_resolves_contact_service_from_app_state(client, app) -> N
             message="I would like to discuss a role with you.",
         )
     )
+
+
+def test_contact_route_requires_all_required_fields(
+    client, contact_service_override
+) -> None:
+    response = client.post(
+        "/api/contact",
+        json={
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "phone": "+27 82 123 4567",
+            "subject": "Interested in working together",
+            "message": "I would like to discuss a role with you.",
+        },
+    )
+
+    assert response.status_code == 422
+    contact_service_override.submit_contact_request.assert_not_called()
