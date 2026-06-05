@@ -45,3 +45,17 @@ def test_app_import_does_not_require_database_connection(
     reloaded = importlib.reload(main_module)
 
     assert reloaded.app is not None
+
+
+def test_settings_allow_missing_openai_api_key(tmp_path: Path) -> None:
+    data_dir = tmp_path / "data"
+    conversations_dir = data_dir / "conversations"
+    conversations_dir.mkdir(parents=True)
+
+    settings = Settings(
+        openai_api_key=None,
+        content_data_dir=data_dir,
+        conversation_storage_dir=conversations_dir,
+    )
+
+    assert settings.openai_api_key is None

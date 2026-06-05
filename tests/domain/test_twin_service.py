@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
 from src.app.domain.twin.service import TwinResourceLoaders, TwinService
+from src.app.infrastructure.llm import LLMConfigurationError
 from src.app.infrastructure.storage import ConversationStore
 
 
@@ -137,3 +138,31 @@ def test_personality_falls_back_when_prompt_building_fails(settings) -> None:
 
     assert service.personality == "Fallback personality"
     fallback_loader.assert_called_once_with()
+
+
+def test_stream_chat_raises_configuration_error_before_streaming(settings) -> None:
+    conversation_store = Mock(spec=ConversationStore)
+    conversation_store.load.return_value = []
+    llm_client = Mock()
+    llm_client.stream_complete.side_effect = LLMConfigurationError(
+        "OPENAI_API_KEY is not configured."
+    )
+
+    service = TwinService(
+        settings=settings,
+        llm_client=llm_client,
+        conversation_store=conversation_store,
+        prompt_builder=TwinPromptBuilder(),
+        resource_loaders=TwinResourceLoaders(
+            prompt_context=lambda: {},
+            fallback_personality=lambda: "Fallback personality",
+        ),
+        personality="Test personality",
+    )
+
+    try:
+        service.stream_chat("Hello there", "stream-session")
+    except LLMConfigurationError as exc:
+        assert str(exc) == "OPENAI_API_KEY is not configured."
+    else:
+        raise AssertionError("Expected LLMConfigurationError to be raised")

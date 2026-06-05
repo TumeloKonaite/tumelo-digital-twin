@@ -29,9 +29,8 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
-    openai_api_key: str = Field(
-        ...,
-        min_length=1,
+    openai_api_key: str | None = Field(
+        default=None,
         validation_alias=AliasChoices("OPENAI_API_KEY"),
     )
     openai_model: str = Field(
@@ -108,6 +107,14 @@ class Settings(BaseSettings):
         if not path.is_absolute():
             path = (PROJECT_ROOT / path).resolve()
         return path
+
+    @field_validator("openai_api_key", mode="before")
+    @classmethod
+    def normalize_openai_api_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        return normalized or None
 
     @model_validator(mode="after")
     def apply_default_conversation_storage_dir(self) -> Settings:

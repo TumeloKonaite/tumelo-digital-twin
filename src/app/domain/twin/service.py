@@ -102,11 +102,12 @@ class TwinService:
         active_session_id = session_id or self.generate_session_id()
         conversation = self.conversation_store.load(active_session_id)
         messages = self.build_messages(conversation, user_message)
+        stream = self.llm_client.stream_complete(messages)
 
         def generate() -> Iterator[str]:
             assistant_parts: list[str] = []
             try:
-                for content in self.llm_client.stream_complete(messages):
+                for content in stream:
                     assistant_parts.append(content)
                     yield content
             finally:

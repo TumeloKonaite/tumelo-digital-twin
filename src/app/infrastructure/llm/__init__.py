@@ -1,3 +1,3 @@
-from .openai_client import OpenAIClient
+from .openai_client import LLMConfigurationError, OpenAIClient, UnavailableLLMClient
 
-__all__ = ["OpenAIClient"]
+__all__ = ["LLMConfigurationError", "OpenAIClient", "UnavailableLLMClient"]

@@ -6,6 +6,7 @@ import pytest
 
 from src.app.core.dependencies import get_twin_service
 from src.app.domain.twin.service import ChatResult, StreamingChatResult
+from src.app.infrastructure.llm import LLMConfigurationError
 
 
 @pytest.fixture
@@ -41,6 +42,19 @@ def test_chat_route_returns_500_when_service_fails(
 
     assert response.status_code == 500
     assert response.json() == {"detail": "llm unavailable"}
+
+
+def test_chat_route_returns_503_when_llm_is_not_configured(
+    client, twin_service_override
+) -> None:
+    twin_service_override.chat.side_effect = LLMConfigurationError(
+        "OPENAI_API_KEY is not configured."
+    )
+
+    response = client.post("/chat", json={"message": "Hello there"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "OPENAI_API_KEY is not configured."}
 
 
 def test_chat_stream_route_returns_streamed_response(
@@ -90,3 +104,16 @@ def test_list_sessions_route_returns_service_sessions(
         ]
     }
     twin_service_override.list_sessions.assert_called_once_with()
+
+
+def test_chat_stream_route_returns_503_when_llm_is_not_configured(
+    client, twin_service_override
+) -> None:
+    twin_service_override.stream_chat.side_effect = LLMConfigurationError(
+        "OPENAI_API_KEY is not configured."
+    )
+
+    response = client.post("/chat/stream", json={"message": "Hello there"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "OPENAI_API_KEY is not configured."}
