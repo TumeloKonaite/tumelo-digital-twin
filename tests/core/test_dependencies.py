@@ -19,6 +19,7 @@ from src.app.infrastructure.contact import (
     NullContactRepository,
     PostgresContactRepository,
 )
+from src.app.infrastructure.llm import UnavailableLLMClient
 
 
 def _settings(
@@ -96,3 +97,24 @@ def test_get_contact_service_resolves_from_container(tmp_path: Path) -> None:
     service = get_contact_service(request)
 
     assert service is app.state.dependencies.contact_service
+
+
+def test_build_dependencies_uses_unavailable_llm_client_without_api_key(
+    tmp_path: Path,
+    caplog,
+) -> None:
+    data_dir = tmp_path / "data"
+    conversations_dir = data_dir / "conversations"
+    conversations_dir.mkdir(parents=True)
+    settings = Settings(
+        openai_api_key=None,
+        database_url=None,
+        content_data_dir=data_dir,
+        conversation_storage_dir=conversations_dir,
+    )
+
+    with caplog.at_level(logging.WARNING):
+        dependencies = build_dependencies(settings)
+
+    assert isinstance(dependencies.llm_client, UnavailableLLMClient)
+    assert "OPENAI_API_KEY is not configured" in caplog.text

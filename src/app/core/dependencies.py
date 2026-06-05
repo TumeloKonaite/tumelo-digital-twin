@@ -11,7 +11,7 @@ from src.app.core.config import Settings
 from src.app.core.config import get_settings as load_settings
 from src.app.domain.contact import ContactRepository, ContactService
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import TwinResourceLoaders, TwinService
+from src.app.domain.twin.service import LLMAdapter, TwinResourceLoaders, TwinService
 from src.app.infrastructure.contact import (
     NullContactRepository,
     PostgresContactRepository,
@@ -22,7 +22,7 @@ from src.app.infrastructure.database import (
     create_session_factory,
 )
 from src.app.infrastructure.email import EmailSender, SMTPEmailSender
-from src.app.infrastructure.llm import OpenAIClient
+from src.app.infrastructure.llm import OpenAIClient, UnavailableLLMClient
 from src.app.infrastructure.storage import ConversationStore, FileConversationStore
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True, slots=True)
 class AppDependencies:
     settings: Settings
-    llm_client: OpenAIClient
+    llm_client: LLMAdapter
     conversation_store: ConversationStore
     email_sender: EmailSender
     database_engine: Engine | None
@@ -45,7 +45,12 @@ class AppDependencies:
     twin_service: TwinService
 
 
-def build_llm_client(settings: Settings) -> OpenAIClient:
+def build_llm_client(settings: Settings) -> LLMAdapter:
+    if not settings.openai_api_key:
+        logger.warning(
+            "OPENAI_API_KEY is not configured; chat completions are unavailable."
+        )
+        return UnavailableLLMClient()
     return OpenAIClient(settings=settings)
 
 
@@ -129,7 +134,7 @@ def build_prompt_builder() -> TwinPromptBuilder:
 
 def build_twin_service(
     settings: Settings,
-    llm_client: OpenAIClient,
+    llm_client: LLMAdapter,
     conversation_store: ConversationStore,
     resource_loaders: TwinResourceLoaders,
     prompt_builder: TwinPromptBuilder,
@@ -206,7 +211,7 @@ def get_settings(request: Request) -> Settings:
     return get_dependencies(request).settings
 
 
-def get_llm_client(request: Request) -> OpenAIClient:
+def get_llm_client(request: Request) -> LLMAdapter:
     return get_dependencies(request).llm_client
 
 

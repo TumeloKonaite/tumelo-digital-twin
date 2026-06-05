@@ -42,7 +42,7 @@ cd tumelo-digital-twin
    - `data/style.txt`
    - `data/fallback_personality.txt`
    - `data/linkedin.pdf`
-4. Copy `.env.example` to `.env` and add your OpenAI key.
+4. Copy `.env.example` to `.env`. Add your OpenAI key if you want chat completions enabled.
 
 ```bash
 cp .env.example .env
@@ -54,12 +54,9 @@ On PowerShell, use:
 Copy-Item .env.example .env
 ```
 
-Required environment variable:
-
-- `OPENAI_API_KEY`: OpenAI API key used for chat completions
-
 Optional environment variables:
 
+- `OPENAI_API_KEY`: enables chat completions; when unset, the API still starts but `/chat` and `/chat/stream` return `503`
 - `OPENAI_MODEL`: defaults to `gpt-4o-mini`
 - `OPENAI_TIMEOUT_SECONDS`: defaults to `30`
 - `OPENAI_MAX_RETRIES`: defaults to `2`

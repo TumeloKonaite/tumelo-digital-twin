@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from src.app.api.schemas.chat import ChatRequest, ChatResponse
 from src.app.core.dependencies import get_twin_service
 from src.app.domain.twin.service import TwinService
+from src.app.infrastructure.llm import LLMConfigurationError
 
 router = APIRouter()
 
@@ -16,6 +17,8 @@ async def chat(
     try:
         result = twin_service.chat(request.message, request.session_id)
         return ChatResponse(response=result.response, session_id=result.session_id)
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -27,6 +30,8 @@ async def chat_stream(
 ):
     try:
         result = twin_service.stream_chat(request.message, request.session_id)
+    except LLMConfigurationError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

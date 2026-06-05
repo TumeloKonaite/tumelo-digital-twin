@@ -7,12 +7,18 @@ from openai import APITimeoutError, OpenAI
 from src.app.core.config import Settings
 
 
+class LLMConfigurationError(RuntimeError):
+    """Raised when the LLM integration is requested without valid configuration."""
+
+
 class OpenAIClient:
     def __init__(
         self,
         settings: Settings,
         client: OpenAI | None = None,
     ) -> None:
+        if not settings.openai_api_key:
+            raise LLMConfigurationError("OPENAI_API_KEY is not configured.")
         self._model = settings.openai_model
         self._client = client or OpenAI(
             api_key=settings.openai_api_key,
@@ -28,7 +34,6 @@ class OpenAIClient:
             )
         except APITimeoutError as exc:
             raise TimeoutError("OpenAI request timed out") from exc
-
         content = response.choices[0].message.content
         return content or ""
 
@@ -49,3 +54,14 @@ class OpenAIClient:
                     yield content
         except APITimeoutError as exc:
             raise TimeoutError("OpenAI request timed out") from exc
+
+
+class UnavailableLLMClient:
+    def __init__(self, message: str = "OPENAI_API_KEY is not configured.") -> None:
+        self._message = message
+
+    def complete(self, messages: list[dict[str, str]]) -> str:
+        raise LLMConfigurationError(self._message)
+
+    def stream_complete(self, messages: list[dict[str, str]]) -> Iterator[str]:
+        raise LLMConfigurationError(self._message)
