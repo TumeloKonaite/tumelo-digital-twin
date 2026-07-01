@@ -3,7 +3,7 @@
   "name": "Tumelo",
   "current_role": "Data Scientist, AI Engineer & Software Engineer",
   "location": "Gauteng, South Africa",
-  "professional_summary": "Data Scientist, AI Engineer, and Software Engineer with 6 years of experience building data-driven products, machine learning solutions, and production-grade AI systems. Strong mathematical foundation with expertise in machine learning, Retrieval-Augmented Generation (RAG), agentic AI architectures, backend engineering, and cloud-native deployment. Passionate about designing scalable software systems that combine data, AI, and modern engineering practices to solve real-world business problems.",
+  "professional_summary": "Data Scientist, AI Engineer, and Software Engineer with 6 years of experience building data-driven products, machine learning solutions, and production-grade AI systems. Strong mathematical foundation with expertise in machine learning, Retrieval-Augmented Generation (RAG), agentic AI architectures, backend engineering, cloud-native deployment, and full-stack product delivery. I focus on designing scalable software systems that combine data, AI, and modern engineering practices to solve real-world business problems.",
   "professional_positioning": {
     "primary_identity": "Data Scientist and Software Engineer",
     "secondary_expertise": [
@@ -34,9 +34,9 @@
     }
   ],
   "certifications": [
-    "AWS Certified Generative AI Developer – Professional (Early Adopter)",
-    "AWS Certified Machine Learning Engineer – Associate",
-    "AWS Certified Solutions Architect – Associate",
+    "AWS Certified Generative AI Developer - Professional (Early Adopter)",
+    "AWS Certified Machine Learning Engineer - Associate",
+    "AWS Certified Solutions Architect - Associate",
     "AWS Certified AI Practitioner",
     "Linux Foundation Authentication & Authorization for Web/API"
   ],
@@ -68,12 +68,20 @@
     "languages": [
       "Python",
       "SQL",
-      "Bash"
+      "Bash",
+      "JavaScript"
     ],
     "backend_frameworks": [
       "FastAPI",
       "Flask",
-      "SQLAlchemy"
+      "SQLAlchemy",
+      "Pydantic"
+    ],
+    "frontend": [
+      "React",
+      "Vite",
+      "HTML",
+      "CSS"
     ],
     "databases": [
       "PostgreSQL",
@@ -82,15 +90,27 @@
       "Redis"
     ],
     "vector_databases": [
-      "Chroma"
+      "Chroma",
+      "PostgreSQL/pgvector"
     ],
     "data_science": [
       "Pandas",
-      "NumPy"
+      "NumPy",
+      "scikit-learn"
     ],
     "machine_learning": [
       "Scikit-learn",
-      "Hugging Face Transformers"
+      "Hugging Face Transformers",
+      "Embeddings",
+      "Model evaluation"
+    ],
+    "ai_engineering": [
+      "LLM APIs",
+      "RAG",
+      "Prompt engineering",
+      "Agentic AI",
+      "LLM evaluation",
+      "SOAP note drafting workflows"
     ],
     "testing": [
       "pytest",
@@ -100,18 +120,28 @@
     ],
     "cloud_and_devops": [
       "AWS",
+      "GCP",
+      "Cloud Run",
+      "Firebase Hosting",
       "Docker",
       "Terraform",
       "Linux",
       "GitHub Actions"
+    ],
+    "storage_and_auth": [
+      "Amazon S3",
+      "MinIO",
+      "Firebase Auth",
+      "Keycloak"
     ]
   },
   "current_focus": [
     "Building production-ready AI products",
     "Developing advanced RAG systems",
     "Designing agentic AI architectures",
+    "Building full-stack AI web applications",
     "Backend software engineering",
-    "Cloud-native AI deployment on AWS",
+    "Cloud-native AI deployment on AWS and GCP",
     "Infrastructure as Code using Terraform",
     "Model lifecycle management",
     "AI API platform development",
@@ -120,6 +150,9 @@
   "project_interests": [
     "Production-grade RAG systems",
     "Agentic AI applications",
+    "Marketplace-style web platforms",
+    "Healthcare and clinical workflow AI assistants",
+    "Travel and tourism AI platforms",
     "Customer support AI assistants",
     "Educational AI platforms",
     "Predictive analytics solutions",
@@ -191,5 +224,121 @@
     "discuss_tradeoffs": true,
     "focus_on_business_value": true,
     "acknowledge_uncertainty_when_needed": true
+  },
+  "featured_projects": [
+    {
+      "name": "LetsGo South Africa - AI-Powered Tourism Platform",
+      "url": "https://letsgodb.web.app/",
+      "period": "Apr 2026 - Present",
+      "associated_with": "Zeno",
+      "summary": "Built a full-stack tourism web application for LetsGo South Africa, enabling admins to create, manage, and publish travel packages while customers browse packages, submit online enquiries, and chat with an AI agent for travel-related questions.",
+      "problem_solved": "Provides a modern digital platform for managing tourism packages, improving package discovery, and supporting customer enquiries through both forms and AI-assisted chat.",
+      "key_features": [
+        "Public travel package browsing",
+        "Admin package creation, editing, publishing, and image management",
+        "Online enquiry workflow",
+        "AI travel assistant for package and travel-related questions",
+        "Authentication-protected admin workflows",
+        "Cloud-hosted frontend and backend deployment"
+      ],
+      "technical_highlights": [
+        "FastAPI backend",
+        "PostgreSQL database",
+        "React/Vite frontend",
+        "Authentication and admin access control",
+        "Image handling",
+        "Enquiry workflows",
+        "Cloud deployment"
+      ],
+      "technologies": [
+        "FastAPI",
+        "PostgreSQL",
+        "React",
+        "Vite",
+        "Firebase Hosting",
+        "GCP Cloud Run",
+        "Cloud SQL",
+        "Docker",
+        "GitHub Actions"
+      ]
+    },
+    {
+      "name": "BeautyVerse - Beauty Services Marketplace",
+      "url": "https://beautyverse.co.za/",
+      "type": "Marketplace / Full-stack Web Application",
+      "description": "Built a beauty services marketplace where providers can create and manage service listings while customers can browse services and submit enquiries.",
+      "highlights": [
+        "Designed a reusable marketplace foundation with listings, categories, users, images, and enquiries.",
+        "Implemented FastAPI backend services with PostgreSQL, SQLAlchemy, Alembic, and Docker-based local development.",
+        "Built listing workflows for provider-owned service creation, public browsing, and customer enquiry submission.",
+        "Worked with authentication and role-based access patterns for provider/customer style marketplace flows.",
+        "Structured the project so the marketplace foundation could be adapted to other domains such as room rentals."
+      ]
+    },
+    {
+      "name": "MedDesk - AI Clinical Intake Proof of Concept",
+      "url": "https://meddesk.co.za/",
+      "summary": "Built a proof-of-concept clinical intake system where patients can chat with an AI assistant to report symptoms before seeing a practitioner. The system collects Subjective and patient-reported Objective information, stores the conversation, detects red-flag symptoms, and prepares structured draft SOAP notes for clinician review.",
+      "problem_solved": "Helps structure patient intake before the consultation, reducing unstructured handover information and giving clinicians a reviewable draft rather than an automated diagnosis.",
+      "key_features": [
+        "Patient-facing AI symptom intake chat",
+        "Conversation persistence",
+        "Subjective and patient-reported Objective information collection",
+        "Red-flag symptom detection",
+        "Structured draft SOAP note generation",
+        "Clinician review workflow"
+      ],
+      "technical_highlights": [
+        "AI-assisted intake orchestration",
+        "Safety-aware red-flag escalation logic",
+        "Structured clinical note drafting",
+        "Backend APIs for intake sessions and messages",
+        "Designed as clinician-support software rather than diagnostic automation"
+      ],
+      "technologies": [
+        "FastAPI",
+        "Python",
+        "LLM APIs",
+        "PostgreSQL",
+        "Prompt orchestration",
+        "Docker"
+      ],
+      "important_boundary": "The system is positioned as a proof of concept for intake support and clinician review, not as a replacement for professional medical judgment."
+    },
+    {
+      "name": "Personal Website Digital Twin / Portfolio AI Assistant",
+      "summary": "Built an AI assistant for a personal portfolio website that answers questions about my background, projects, technical experience, and professional interests using a structured profile and grounded context.",
+      "problem_solved": "Allows visitors to interactively explore my experience and projects instead of only reading a static CV.",
+      "key_features": [
+        "Grounded profile-based responses",
+        "Conversation persistence",
+        "Professional tone and response guidelines",
+        "Backend service orchestration",
+        "Portfolio integration"
+      ],
+      "technical_highlights": [
+        "FastAPI backend",
+        "Prompt builder and service orchestration",
+        "Profile JSON and summary files as knowledge sources",
+        "Conversation storage"
+      ],
+      "technologies": [
+        "FastAPI",
+        "Python",
+        "OpenAI LLM APIs",
+        "JSON knowledge base",
+        "Docker"
+      ]
+    }
+  ],
+  "project_aliases": {
+    "letsgodb.web.app": "LetsGo South Africa - AI-Powered Tourism Platform",
+    "letsgosouth": "LetsGo South Africa - AI-Powered Tourism Platform",
+    "beautyverse.co.za": "BeautyVerse - Beauty Services Marketplace",
+    "beautyverse": "BeautyVerse - Beauty Services Marketplace",
+    "meddesk.co.za": "MedDesk - AI Clinical Intake Proof of Concept",
+    "meddesk": "MedDesk - AI Clinical Intake Proof of Concept",
+    "digital twin": "Personal Website Digital Twin / Portfolio AI Assistant",
+    "portfolio chatbot": "Personal Website Digital Twin / Portfolio AI Assistant"
   }
 }

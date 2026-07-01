@@ -51,18 +51,7 @@ export default function Twin() {
         setIsLoading(true);
 
         try {
-            const assistantMessageId = (Date.now() + 1).toString();
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: assistantMessageId,
-                    role: 'assistant',
-                    content: '',
-                    timestamp: new Date(),
-                },
-            ]);
-
-            const response = await fetch(`${API_BASE_URL}/chat/stream`, {
+            const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,77 +63,32 @@ export default function Twin() {
             });
 
             if (!response.ok) throw new Error('Failed to send message');
-            if (!response.body) throw new Error('Streaming not supported by response');
 
-            if (!sessionId) {
-                const streamedSessionId = response.headers.get('X-Session-Id');
-                if (streamedSessionId) {
-                    setSessionId(streamedSessionId);
-                }
+            const payload = await response.json();
+            if (payload.session_id) {
+                setSessionId(payload.session_id);
             }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let fullText = '';
-
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value, { stream: true });
-                if (!chunk) continue;
-
-                fullText += chunk;
-                setMessages(prev =>
-                    prev.map(message =>
-                        message.id === assistantMessageId
-                            ? { ...message, content: fullText }
-                            : message
-                    )
-                );
-            }
-
-            const finalChunk = decoder.decode();
-            if (finalChunk) {
-                fullText += finalChunk;
-                setMessages(prev =>
-                    prev.map(message =>
-                        message.id === assistantMessageId
-                            ? { ...message, content: fullText }
-                            : message
-                    )
-                );
-            }
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: payload.response ?? 'I ran into a temporary issue while generating a response. Please try again.',
+                    timestamp: new Date(),
+                },
+            ]);
         } catch (error) {
             console.error('Error:', error);
-            setMessages(prev => {
-                const updated = [...prev];
-                let lastAssistantIndex = -1;
-                for (let i = updated.length - 1; i >= 0; i -= 1) {
-                    if (updated[i].role === 'assistant') {
-                        lastAssistantIndex = i;
-                        break;
-                    }
-                }
-
-                if (lastAssistantIndex >= 0 && !updated[lastAssistantIndex].content) {
-                    updated[lastAssistantIndex] = {
-                        ...updated[lastAssistantIndex],
-                        content: 'I ran into a temporary issue while generating a response. Please try again.',
-                    };
-                    return updated;
-                }
-
-                return [
-                    ...prev,
-                    {
-                        id: (Date.now() + 1).toString(),
-                        role: 'assistant',
-                        content: 'I ran into a temporary issue while generating a response. Please try again.',
-                        timestamp: new Date(),
-                    },
-                ];
-            });
+            setMessages(prev => [
+                ...prev,
+                {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: 'I ran into a temporary issue while generating a response. Please try again.',
+                    timestamp: new Date(),
+                },
+            ]);
         } finally {
             setIsLoading(false);
         }
