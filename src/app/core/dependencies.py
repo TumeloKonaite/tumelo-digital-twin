@@ -136,6 +136,7 @@ def build_twin_service(
     settings: Settings,
     llm_client: LLMAdapter,
     conversation_store: ConversationStore,
+    contact_service: ContactService,
     resource_loaders: TwinResourceLoaders,
     prompt_builder: TwinPromptBuilder,
 ) -> TwinService:
@@ -143,6 +144,7 @@ def build_twin_service(
         settings=settings,
         llm_client=llm_client,
         conversation_store=conversation_store,
+        contact_service=contact_service,
         resource_loaders=resource_loaders,
         prompt_builder=prompt_builder,
     )
@@ -164,6 +166,7 @@ def build_dependencies(settings: Settings) -> AppDependencies:
         settings=settings,
         llm_client=llm_client,
         conversation_store=conversation_store,
+        contact_service=contact_service,
         resource_loaders=resource_loaders,
         prompt_builder=prompt_builder,
     )

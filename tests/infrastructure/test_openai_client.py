@@ -39,6 +39,61 @@ def test_complete_converts_sdk_timeout_to_timeout_error(settings) -> None:
         raise AssertionError("Expected TimeoutError to be raised")
 
 
+def test_complete_with_tools_returns_tool_calls(settings) -> None:
+    sdk_client = Mock()
+    sdk_client.chat.completions.create.return_value = Mock(
+        choices=[
+            Mock(
+                message=Mock(
+                    content="",
+                    tool_calls=[
+                        Mock(
+                            id="tool-call-1",
+                            function=Mock(
+                                name="submit_contact_request",
+                                arguments='{"email":"jane@example.com"}',
+                            ),
+                        )
+                    ],
+                )
+            )
+        ]
+    )
+    client = OpenAIClient(settings=settings, client=sdk_client)
+
+    result = client.complete_with_tools(
+        [{"role": "user", "content": "Help me get in touch"}],
+        [
+            {
+                "type": "function",
+                "function": {
+                    "name": "submit_contact_request",
+                    "parameters": {"type": "object"},
+                },
+            }
+        ],
+    )
+
+    assert result.content == ""
+    assert len(result.tool_calls) == 1
+    assert result.tool_calls[0].id == "tool-call-1"
+    assert result.tool_calls[0].name == "submit_contact_request"
+    assert result.tool_calls[0].arguments == '{"email":"jane@example.com"}'
+    sdk_client.chat.completions.create.assert_called_once_with(
+        model=settings.openai_model,
+        messages=[{"role": "user", "content": "Help me get in touch"}],
+        tools=[
+            {
+                "type": "function",
+                "function": {
+                    "name": "submit_contact_request",
+                    "parameters": {"type": "object"},
+                },
+            }
+        ],
+    )
+
+
 def test_stream_complete_yields_only_non_empty_chunks(settings) -> None:
     sdk_client = Mock()
     sdk_client.chat.completions.create.return_value = [
