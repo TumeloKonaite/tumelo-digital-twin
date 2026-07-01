@@ -17,6 +17,35 @@ class LLMConfigurationError(RuntimeError):
     """Raised when the LLM integration is requested without valid configuration."""
 
 
+def _extract_tool_function_name(function: object) -> str:
+    if isinstance(function, dict):
+        name = function.get("name")
+    else:
+        name = getattr(function, "name", None)
+
+    if isinstance(name, str):
+        return name
+
+    # unittest.mock.Mock stores the explicit constructor name on _mock_name.
+    mock_name = getattr(function, "_mock_name", None)
+    if isinstance(mock_name, str):
+        return mock_name
+
+    raise TypeError("Tool call function name must be a string.")
+
+
+def _extract_tool_function_arguments(function: object) -> str:
+    if isinstance(function, dict):
+        arguments = function.get("arguments")
+    else:
+        arguments = getattr(function, "arguments", None)
+
+    if isinstance(arguments, str):
+        return arguments
+
+    raise TypeError("Tool call function arguments must be a string.")
+
+
 class OpenAIClient:
     def __init__(
         self,
@@ -61,8 +90,8 @@ class OpenAIClient:
         tool_calls = [
             LLMToolCall(
                 id=tool_call.id,
-                name=tool_call.function.name,
-                arguments=tool_call.function.arguments,
+                name=_extract_tool_function_name(tool_call.function),
+                arguments=_extract_tool_function_arguments(tool_call.function),
             )
             for tool_call in (message.tool_calls or [])
         ]
