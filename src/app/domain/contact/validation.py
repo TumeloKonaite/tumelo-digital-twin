@@ -25,8 +25,6 @@ class ContactSubmissionPayload(BaseModel):
         return value.lower()
 
     def to_submission(self) -> ContactSubmission:
-        submission_field_names = {
-            field.name for field in fields(ContactSubmission)
-        }
+        submission_field_names = {field.name for field in fields(ContactSubmission)}
         payload = self.model_dump(include=submission_field_names)
         return ContactSubmission(**payload)

@@ -278,8 +278,7 @@ def test_chat_requires_confirmation_before_contact_submission(settings) -> None:
     result = service.chat("Can you send my contact details?", "session-1")
 
     assert (
-        result.response
-        == "I have your details. Please confirm and I will submit them."
+        result.response == "I have your details. Please confirm and I will submit them."
     )
     contact_service.submit_contact_request.assert_not_called()
 
