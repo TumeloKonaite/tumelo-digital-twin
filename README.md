@@ -2,13 +2,14 @@
 
 [![Backend CI](https://github.com/TumeloKonaite/tumelo-digital-twin/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/TumeloKonaite/tumelo-digital-twin/actions/workflows/backend-ci.yml)
 [![Cerebrium Deployment](https://github.com/TumeloKonaite/tumelo-digital-twin/actions/workflows/cerebrium-deploy.yml/badge.svg)](https://github.com/TumeloKonaite/tumelo-digital-twin/actions/workflows/cerebrium-deploy.yml)
+[![Deploy to Modal](https://github.com/TumeloKonaite/tumelo-digital-twin/actions/workflows/deploy-modal.yml/badge.svg)](https://github.com/TumeloKonaite/tumelo-digital-twin/actions/workflows/deploy-modal.yml)
 
 An AI portfolio app with:
 
 - a FastAPI backend in `src/`
 - a Next.js frontend in `frontend/`
 - custom profile and prompt data in `data/`
-- GitHub Actions pipelines for CI and Cerebrium deployment
+- GitHub Actions pipelines for CI plus Cerebrium and Modal deployment
 
 The backend entrypoint is `main:app`.
 
@@ -22,6 +23,7 @@ The backend entrypoint is `main:app`.
 |-- tests/                    Backend test suite
 |-- .github/workflows/        CI and deployment workflows
 |-- cerebrium.toml            Cerebrium deployment config
+|-- modal_app.py              Modal ASGI deployment entrypoint
 |-- requirements.txt          Backend runtime dependencies
 `-- pyproject.toml            Tooling and test configuration
 ```
@@ -149,10 +151,11 @@ The Compose setup mounts `src/`, `main.py`, and `data/` for local iteration whil
 
 ## CI/CD
 
-This repository includes two GitHub Actions workflows:
+This repository includes three GitHub Actions workflows:
 
 - [`.github/workflows/backend-ci.yml`](.github/workflows/backend-ci.yml): runs `ruff check .`, `black --check .`, and `pytest`
 - [`.github/workflows/cerebrium-deploy.yml`](.github/workflows/cerebrium-deploy.yml): deploys the backend to Cerebrium
+- [`.github/workflows/deploy-modal.yml`](.github/workflows/deploy-modal.yml): deploys the backend to Modal
 
 The Cerebrium setup below follows the official guide: [Cerebrium CI/CD Pipelines](https://cerebrium.ai/docs/deployments/ci-cd).
 
@@ -186,6 +189,37 @@ The Cerebrium setup below follows the official guide: [Cerebrium CI/CD Pipelines
 
 The backend deploys using [`cerebrium.toml`](cerebrium.toml), Python `3.12`, and `requirements.txt`.
 
+### Backend on Modal
+
+The backend can also deploy to Modal using [`modal_app.py`](modal_app.py). The Modal image uses Python `3.12`, installs from `requirements.txt`, and packages `src/`, `data/`, and `main.py` without changing the existing FastAPI app structure.
+
+Create the runtime secret before the first deploy:
+
+```bash
+modal secret create digital-twin-api-secrets OPENAI_API_KEY=your_openai_key
+```
+
+Add any other environment variables your app needs to the same secret, for example `DATABASE_URL`, `CORS_ORIGINS`, or `ENVIRONMENT`.
+
+For local Modal testing:
+
+```bash
+pip install modal
+modal setup
+modal serve modal_app.py
+```
+
+For deployment:
+
+```bash
+modal deploy modal_app.py
+```
+
+For GitHub Actions deployment, add these repository secrets:
+
+- `MODAL_TOKEN_ID`
+- `MODAL_TOKEN_SECRET`
+
 ### Frontend on Vercel
 
 If you deploy the frontend separately on Vercel:
@@ -198,6 +232,7 @@ If you deploy the frontend separately on Vercel:
 ## Useful Files
 
 - [`main.py`](main.py): root backend entrypoint
+- [`modal_app.py`](modal_app.py): Modal deployment wrapper for the FastAPI app
 - [`src/app/main.py`](src/app/main.py): FastAPI app factory and router wiring
 - [`src/app/domain/twin/prompt_builder.py`](src/app/domain/twin/prompt_builder.py): builds the system prompt
 - [`cerebrium.toml`](cerebrium.toml): Cerebrium deployment configuration
