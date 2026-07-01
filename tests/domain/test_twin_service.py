@@ -4,8 +4,11 @@ from unittest.mock import Mock
 
 from src.app.domain.twin.llm_models import LLMCompletion, LLMToolCall
 from src.app.domain.twin.prompt_builder import TwinPromptBuilder
-from src.app.domain.twin.service import CONTACT_TOOL_NAME
-from src.app.domain.twin.service import TwinResourceLoaders, TwinService
+from src.app.domain.twin.service import (
+    CONTACT_TOOL_NAME,
+    TwinResourceLoaders,
+    TwinService,
+)
 from src.app.infrastructure.llm import LLMConfigurationError
 from src.app.infrastructure.storage import ConversationStore
 

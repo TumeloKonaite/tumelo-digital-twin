@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "How can I contact you?"
+  },
+  {
+    "role": "assistant",
+    "content": "You can contact me via email at tumelokonaite@gmail.com. Additionally, you can connect with me on LinkedIn at [my LinkedIn profile](https://www.linkedin.com/in/tumelo-tshana-konaite-049054152). If there's anything specific you'd like to discuss, feel free to reach out!"
+  }
+]
